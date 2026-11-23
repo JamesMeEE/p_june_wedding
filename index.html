@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>June &amp; Non — The Wedding</title>
 <meta name="description" content="Chenisa & Sranon — Save the date 14.01.2027">
 <meta property="og:title" content="June & Non — The Wedding">
@@ -24,7 +24,8 @@
   --ease-soft:cubic-bezier(.4,0,.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{background:#ddd6c8}
+html{background:#ddd6c8;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}      /* ไม่ให้ซูม (ทั้งถ่างนิ้วและแตะสองครั้ง) */
+button,a,label{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 body{font-family:var(--thai);color:var(--ink);overflow-x:hidden}
 body.locked{overflow:hidden}
 img{display:block;max-width:none;-webkit-user-drag:none;user-select:none}
@@ -43,13 +44,17 @@ img.a, .a > img{height:auto}
 a.a, button.a{display:block}
 .tap{transition:scale .25s var(--ease-out)}
 .tap:active{scale:.96}
+/* ของที่กดได้ เด้งเบา ๆ ตลอดเวลา */
+@keyframes bob{0%,100%{scale:1}30%{scale:1.07}52%{scale:.985}72%{scale:1.03}}
+.bob{animation:bob 2.2s ease-in-out infinite;animation-delay:var(--bd,0s)}
+.deco{pointer-events:none}
 
 /* โผล่ขึ้นตอนเลื่อนถึง */
 .reveal{opacity:0;translate:0 calc(26 * var(--u));transition:opacity 1s var(--ease-soft), translate 1.2s var(--ease-out);transition-delay:var(--d,0s)}
 .reveal.in{opacity:1;translate:0 0}
 
 /* ================= หน้า 1–2 : พื้นลูกไม้ ================= */
-.p-lace{--dw:744;height:calc(2684 * var(--u));background:#f1ece2 url('assets/bg-lace.webp') top center/100% auto repeat-y}
+.p-lace{--dw:744;height:calc(2722 * var(--u));background:#f1ece2 url('assets/bg-lace.webp') top center/100% auto repeat-y}
 
 .envelope{position:absolute;inset:0;pointer-events:none}
 .envelope > *{pointer-events:auto}
@@ -68,25 +73,16 @@ a.a, button.a{display:block}
 }
 .vinyl::after{content:"";position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(from 20deg,rgba(255,255,255,.2),transparent 14%,transparent 48%,rgba(255,255,255,.14) 54%,transparent 66%,transparent)}
-.vinyl.playing{animation:spin 4s linear infinite}
+.vinyl.playing{animation:spin 4s linear infinite}      /* เพลงเล่น = หมุน, เพลงหยุด = เด้งชวนให้กด */
+.vinyl.hint::before{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--wine);opacity:0;animation:ping 2.4s var(--ease-out) infinite}   /* ชวนให้แตะเปิดเพลง */
+@keyframes ping{0%{scale:1;opacity:.55}100%{scale:1.45;opacity:0}}
 @keyframes spin{to{rotate:360deg}}
-/* ป้ายชื่อเพลง โผล่ตอนเพลงกำลังเล่น */
-.np{
-  position:absolute;left:min(calc(556 * var(--u)), calc(100% - 94px));top:calc(500 * var(--u));pointer-events:none;
-  display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;
-  background:rgba(250,247,238,.94);box-shadow:0 2px 8px rgba(60,40,20,.22);color:var(--wine);
-  font-family:Georgia, 'Times New Roman', var(--thai);font-size:11px;line-height:1.25;white-space:nowrap;
-  opacity:0;translate:-8px 0;transition:opacity .5s var(--ease-soft), translate .6s var(--ease-out);
-}
-.np b{display:block;font-weight:600}
-.np small{display:block;font-size:9px;letter-spacing:.14em;opacity:.8}
-.vinyl.playing ~ .np{opacity:1;translate:0 0}
-.eq{display:flex;align-items:flex-end;gap:2px;height:12px}
-.eq i{width:2px;height:100%;background:currentColor;border-radius:1px;transform-origin:bottom;animation:eq .9s ease-in-out infinite alternate;animation-play-state:paused}
-.eq i:nth-child(2){animation-duration:.6s;animation-delay:-.3s}
-.eq i:nth-child(3){animation-duration:.75s;animation-delay:-.5s}
-.vinyl.playing ~ .np .eq i{animation-play-state:running}
-@keyframes eq{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+/* ชื่อเพลงวนรอบแผ่นเสียง (อยู่นิ่ง ไม่หมุนตามแผ่น) โผล่ตอนเพลงกำลังเล่น */
+.np{pointer-events:none;overflow:visible;opacity:0;transition:opacity .8s var(--ease-soft)}
+.np text{font-family:var(--thai);font-size:15px;letter-spacing:.5px;fill:var(--wine)}
+.np .en{letter-spacing:3.2px;font-size:12.5px}
+.np .dot{letter-spacing:5px}
+.vinyl.playing ~ .np{opacity:1}
 
 /* นับถอยหลัง */
 .cd{position:absolute;left:0;right:0;top:calc(1866 * var(--u));height:calc(72 * var(--u));
@@ -95,11 +91,11 @@ a.a, button.a{display:block}
 .cd i{font-style:normal;font-size:.7em;translate:-50% -8%}
 
 /* ================= หน้า 3 : สวน / Location ================= */
-.p-garden{--dw:946;margin-top:calc(-27 * var(--u))}
+.p-garden{--dw:946;margin-top:calc(-74 * var(--u))}      /* ให้ลายลูกไม้ลอดใต้ขอบกระดาษฉีก */
 .p-garden > .bg, .p-theme > .bg, .p-wishes > .bg{width:100%;height:auto}
 
 /* ================= หน้า 4 : Theme / ตอบรับ ================= */
-.p-theme{--dw:945;margin-top:calc(-96 * var(--u));height:calc(1580 * var(--u));
+.p-theme{--dw:945;margin-top:calc(-140 * var(--u));height:calc(1580 * var(--u));
   background:linear-gradient(transparent 0 calc(700 * var(--u)), var(--cream) calc(700 * var(--u)))}
 .p-theme > .bg{position:absolute;left:0;top:0}
 .rsvp-box{background:rgba(120,120,120,.5);border-radius:calc(30 * var(--u))}
@@ -154,7 +150,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .lightbox.on{opacity:1;visibility:visible;transition:opacity .35s var(--ease-soft), visibility 0s}
 .lightbox figure{background:#f4f1e8;padding:10px 10px 14px;box-shadow:0 20px 50px rgba(0,0,0,.5);width:min(88vw, 440px);scale:.94;transition:scale .45s var(--ease-out)}
 .lightbox.on figure{scale:1}
-.lightbox img{width:100%;height:auto;aspect-ratio:512/489;object-fit:cover}
+.lightbox img{width:100%;height:auto;aspect-ratio:512/489;object-fit:cover;background:#d9d9de}
 .lightbox figcaption{text-align:center;font-family:'Cronde',serif;font-size:15px;letter-spacing:.2em;padding-top:10px;color:#4a3f35}
 .lb-btn{position:absolute;top:50%;translate:0 -50%;width:44px;height:64px;color:#fff;font-size:34px;line-height:1}
 .lb-prev{left:max(4px, calc(50% - 280px))}.lb-next{right:max(4px, calc(50% - 280px))}
@@ -163,7 +159,8 @@ input.wish-field{padding-top:0;padding-bottom:0}
 /* ---------- กล้องอัดวิดีโออวยพร ---------- */
 .cam{position:fixed;inset:0;z-index:90;background:#000;display:none;color:#fff}
 .cam.on{display:block}
-.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}   /* ไม่กลับด้าน: เห็นแบบไหนบันทึกแบบนั้น */
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.cam.mirror video{transform:scaleX(-1)}      /* กล้องหน้า: แสดงแบบกระจกทั้งตอนถ่ายและตอนดูตัวอย่าง */
 .cam-top,.cam-bottom,.cam-review{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
 .cam-top{top:0;padding-top:max(14px, env(safe-area-inset-top));background:linear-gradient(rgba(0,0,0,.55),transparent)}
 .cam-bottom,.cam-review{bottom:0;padding-bottom:max(22px, env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.6))}
@@ -207,11 +204,14 @@ input.wish-field{padding-top:0;padding-bottom:0}
     <!-- ซองจดหมาย -->
     <div class="envelope reveal" id="envelope">
       <img class="a" style="--x:130;--y:422;--w:392" src="assets/env-back.webp" alt="" width="860" height="935">
-      <button class="a strip tap" id="strip" style="--x:140;--y:345;--w:110" aria-label="ดูรูปใหญ่ (3 รูป)"><img src="assets/strip.webp" alt="" width="300" height="877"></button>
+      <button class="a strip tap bob" id="strip" style="--x:140;--y:345;--w:110" aria-label="ดูรูปใหญ่ (3 รูป)"><img src="assets/strip.webp" alt="" width="300" height="877"></button>
       <img class="a" style="--x:333;--y:312;--w:227" src="assets/card-welcome.webp" alt="Welcome to the beginning of our next chapter" width="560" height="767">
       <img class="a" style="--x:262;--y:422;--w:180" src="assets/swan.webp" alt="" width="420" height="277">
-      <button class="a vinyl" id="vinyl" style="--x:415;--y:470;--w:136" aria-label="เปิด/ปิดเพลง"></button>
-      <div class="np" id="nowPlaying" aria-live="polite"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span><b data-song></b><small data-artist></small></span></div>
+      <button class="a vinyl bob" id="vinyl" style="--x:415;--y:470;--w:136" aria-label="เปิด/ปิดเพลง"></button>
+      <svg class="a np" id="nowPlaying" style="--x:391;--y:446;--w:184" viewBox="0 0 184 184" aria-hidden="true">
+        <path id="npArc" d="M92,8 a84,84 0 1,1 0,168 a84,84 0 1,1 0,-168" fill="none"/>
+        <text><textPath href="#npArc" startOffset="6.5%"><tspan data-song></tspan><tspan class="dot"> · </tspan><tspan class="en" data-artist></tspan></textPath></text>
+      </svg>
       <img class="a heart" style="--x:185;--y:505;--w:293" src="assets/heart.webp" alt="Chenisa &amp; Sranon" width="720" height="571">
       <img class="a" style="--x:130;--y:422;--w:392;pointer-events:none" src="assets/env-front.webp" alt="" width="860" height="935">
       <img class="a flowers" style="--x:435;--y:612;--w:205" src="assets/flowers.webp" alt="" width="520" height="1091">
@@ -240,7 +240,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
   <section class="page p-garden">
     <img class="bg" src="assets/bg-garden.webp" alt="" width="945" height="1664" loading="lazy">
     <img class="a reveal" style="--x:199;--y:114;--w:542" src="assets/location.webp" alt="Location — สักกายะ | SAK-KA-YA" width="542" height="194" loading="lazy">
-    <a class="a tap reveal" id="mapBtn" style="--x:275;--y:353;--w:393" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img src="assets/btn-maps.webp" alt="" width="860" height="147" loading="lazy"></a>
+    <a class="a tap reveal bob" id="mapBtn" style="--bd:.3s;--x:275;--y:353;--w:393" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img src="assets/btn-maps.webp" alt="" width="860" height="147" loading="lazy"></a>
     <img class="a reveal" style="--x:665;--y:312;--w:97;pointer-events:none" src="assets/click.webp" alt="" width="260" height="180" loading="lazy">
     <img class="a reveal" style="--x:100;--y:465;--w:755" src="assets/plan.webp" alt="What's the plan? 15:29 พิธีแห่ขันหมาก · 16:19 พิธีรดน้ำสังข์ · 18:09 ฉลองมงคลสมรส" width="1100" height="1514" loading="lazy">
   </section>
@@ -250,7 +250,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
     <img class="bg" src="assets/bg-theme.webp" alt="Theme colors — Outdoor Garden (งานแต่งในสวนกลางแจ้ง)" width="1000" height="1451" loading="lazy">
     <img class="a reveal" style="--x:445;--y:468;--w:475" src="assets/tray-join.webp" alt="Will you join us?" width="812" height="1157" loading="lazy">
     <img class="a reveal" style="--x:38;--y:863;--w:382" src="assets/clipboard.webp" alt="ไม่อยากพลาดความสนุกกดติดตามได้ที่ LINE OFFICIAL · กรอกข้อมูลเพื่อตอบรับเข้าร่วมงาน · ขอความกรุณาตอบรับภายใน 5 ธ.ค. 2569" width="797" height="1289" loading="lazy">
-    <a class="a tap reveal" id="lineBtn" style="--x:183;--y:1160;--w:124" target="_blank" rel="noopener" aria-label="LINE Official"><img src="assets/line.webp" alt="" width="300" height="300" loading="lazy"></a>
+    <a class="a tap reveal bob" id="lineBtn" style="--bd:.5s;--x:183;--y:1160;--w:124" target="_blank" rel="noopener" aria-label="LINE Official"><img src="assets/line.webp" alt="" width="300" height="300" loading="lazy"></a>
 
     <img class="a reveal" style="--x:684;--y:1150;--w:246" src="assets/swan-blue-non.webp" alt="" width="520" height="481" loading="lazy">
     <img class="a reveal" style="--x:405;--y:1310;--w:285" src="assets/swan-blue-june.webp" alt="" width="520" height="481" loading="lazy">
@@ -263,7 +263,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <button type="button" class="a step tap" id="cMinus" style="--x:484;--y:1340;--w:58" aria-label="ลดจำนวนคน">−</button>
       <input class="a h field num" style="--x:556;--y:1341;--w:84;--h:56" id="r-count" name="count" type="number" inputmode="numeric" min="1" max="20" value="1" required>
       <button type="button" class="a step tap" id="cPlus" style="--x:654;--y:1340;--w:58" aria-label="เพิ่มจำนวนคน">+</button>
-      <button class="a tap" style="--x:590;--y:1420;--w:175" type="submit" aria-label="ส่งข้อมูล"><img src="assets/btn-submit.webp" alt="" width="420" height="140" loading="lazy"></button>
+      <button class="a tap bob" style="--bd:.9s;--x:590;--y:1420;--w:175" type="submit" aria-label="ส่งข้อมูล"><img src="assets/btn-submit.webp" alt="" width="420" height="140" loading="lazy"></button>
       <div class="a h done-msg" id="rsvpDone" style="--x:450;--y:1160;--w:452;--h:328" role="status">ได้รับข้อมูลแล้ว<br>ขอบคุณค่ะ แล้วพบกันวันงานนะคะ</div>
     </form>
   </section>
@@ -275,6 +275,9 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <input class="a h wish-field" style="--x:124;--y:585;--w:1038;--h:128" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
       <textarea class="a h wish-field" style="--x:124;--y:752;--w:1038;--h:464" name="message" maxlength="2000" placeholder="เขียนคำอวยพรให้พวกเรา (Leave your wishes for us) :)" aria-label="คำอวยพร"></textarea>
 
+      <img class="a deco bob" style="--x:349;--y:1254;--w:206" src="assets/ic-photo.webp" alt="" width="200" height="175" loading="lazy">
+      <img class="a deco bob" style="--bd:.4s;--x:742;--y:1255;--w:184" src="assets/ic-video.webp" alt="" width="200" height="162" loading="lazy">
+      <img class="a deco bob" style="--bd:.8s;--x:343;--y:1460;--w:608" src="assets/btn-send.webp" alt="" width="480" height="93" loading="lazy">
       <button type="button" class="a h hot tap" id="pickPhoto" style="--x:70;--y:1240;--w:495;--h:205" aria-label="Add a Photo — แนบรูป"><span class="badge" id="photoBadge">✓</span></button>
       <button type="button" class="a h hot tap" id="pickVideo" style="--x:730;--y:1240;--w:495;--h:205" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
       <input type="file" id="photoInput" accept="image/*" hidden>
@@ -379,11 +382,23 @@ vinyl.addEventListener('click', () => {
   else audio.pause();
 });
 if (C.autoplay) {
-  const evs = ['pointerup', 'touchend', 'click', 'keydown'];
-  const stop = () => evs.forEach(ev => document.removeEventListener(ev, first, true));
-  const first = () => { autoAt = performance.now(); playMusic().then(stop).catch(() => { autoAt = 0; }); };
+  // เบราว์เซอร์นับเฉพาะ "การแตะ" เป็นการอนุญาตให้เล่นเสียง (การเลื่อนจอไม่นับ) จึงลองใหม่ทุกครั้งที่มีการแตะจนกว่าจะเล่นได้
+  const evs = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'click', 'keydown'];
+  const stop = () => { evs.forEach(ev => document.removeEventListener(ev, first, true)); vinyl.classList.remove('hint'); };
+  const first = () => { if (!audio.paused) return; autoAt = performance.now(); playMusic().then(stop).catch(() => { autoAt = 0; }); };
   evs.forEach(ev => document.addEventListener(ev, first, { capture: true, passive: true }));
+  vinyl.classList.add('hint');
+  playMusic().then(stop).catch(() => {});             // บางเครื่องยอมให้เล่นได้เลยตั้งแต่เปิดหน้า
 }
+// ออกจากหน้าเว็บ / สลับแอป / ล็อกจอ → เพลงหยุดทันที · กลับมาแล้วเล่นต่อ
+let resumeOnShow = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { resumeOnShow = !audio.paused; audio.pause(); }
+  else if (resumeOnShow) { resumeOnShow = false; if (!document.querySelector('#cam.on')) playMusic().catch(() => {}); }
+});
+window.addEventListener('pagehide', () => audio.pause());
+// กันซูมด้วยการถ่างนิ้วบน iOS (Safari ไม่สนใจ user-scalable=no)
+['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
 /* ---------- เลื่อนแล้วค่อย ๆ โผล่ ---------- */
 const io = new IntersectionObserver(es => {
@@ -536,7 +551,7 @@ function useVideoFile(f) {
 }
 for (const id of ['#videoInput', '#videoLib']) $(id).addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; closeCam(); useVideoFile(f); });
 
-/* ---------- กล้องในหน้าเว็บ: Full HD, ไม่กลับด้าน, จำกัดเวลา ---------- */
+/* ---------- กล้องในหน้าเว็บ: Full HD, กล้องหน้าแสดงแบบกระจก, จำกัดเวลา ---------- */
 const cam = $('#cam'), camView = $('#camView');
 let camStream = null, camRec = null, camChunks = [], camBlob = null, camUrl = null, camTimer = null, camFacing = 'user', camLeft = 0;
 const canRecord = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
@@ -550,6 +565,7 @@ function clearClip() { if (camUrl) URL.revokeObjectURL(camUrl); camUrl = null; c
 async function startStream() {
   stopStream(); clearClip();
   cam.classList.remove('review', 'recording', 'msg');
+  cam.classList.toggle('mirror', camFacing === 'user');
   camView.loop = false; camView.removeAttribute('src'); camView.muted = true;
   $('#camTime').textContent = fmt(C.videoSeconds); $('#camHint').textContent = `ยาวสุด ${C.videoSeconds} วินาที`;
   try {
@@ -577,7 +593,7 @@ function closeCam() {
   if (camRec && camRec.state !== 'inactive') { camRec.onstop = null; camRec.stop(); }
   camRec = null; stopStream(); clearClip();
   camView.pause(); camView.srcObject = null; camView.removeAttribute('src'); camView.load();
-  cam.classList.remove('on', 'review', 'recording', 'msg'); document.body.classList.remove('locked');
+  cam.classList.remove('on', 'review', 'recording', 'msg', 'mirror'); document.body.classList.remove('locked');
 }
 function startRec() {
   if (!camStream) return;
