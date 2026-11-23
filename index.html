@@ -183,12 +183,15 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .cam.review .cam-bottom{display:none}
 .cam-msg{position:absolute;left:24px;right:24px;top:50%;translate:0 -50%;text-align:center;font-size:15px;line-height:1.7;display:none}
 .cam.msg .cam-msg{display:block}
+.cam-msg button{display:block;margin:18px auto 0;padding:13px 26px;border-radius:999px;background:#f5f0e4;color:#3a2a1e;font-size:15px;font-weight:600}
 .cam.msg .cam-rec{visibility:hidden}
 
 .toast{position:fixed;left:50%;bottom:28px;translate:-50% 20px;background:rgba(30,27,20,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;
   opacity:0;transition:opacity .3s, translate .3s;z-index:99;max-width:90vw;text-align:center;pointer-events:none}
 .toast.on{opacity:1;translate:-50% 0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+/* ช่องเลือกไฟล์: ซ่อนจากสายตาแต่ไม่ใช้ display:none (เบราว์เซอร์ในแอปบางตัวไม่ยอมเปิดตัวเลือกไฟล์ถ้าซ่อนแบบนั้น) */
+.file-in{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{transition-duration:.01s !important;transition-delay:0s !important;animation:none !important}
@@ -281,9 +284,9 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <img class="a deco bob" style="--bd:.8s;--x:343;--y:1460;--w:608" src="assets/btn-send.webp" alt="" width="480" height="93" loading="lazy">
       <button type="button" class="a h hot tap" id="pickPhoto" style="--x:70;--y:1240;--w:495;--h:205" aria-label="Add a Photo — แนบรูป"><span class="badge" id="photoBadge">✓</span></button>
       <button type="button" class="a h hot tap" id="pickVideo" style="--x:730;--y:1240;--w:495;--h:205" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
-      <input type="file" id="photoInput" accept="image/*" hidden>
-      <input type="file" id="videoInput" accept="video/*" capture="user" hidden>
-      <input type="file" id="videoLib" accept="video/*" hidden>
+      <input type="file" class="file-in" id="photoInput" accept="image/*" tabindex="-1" aria-hidden="true">
+      <input type="file" class="file-in" id="videoInput" accept="video/*" capture="user" tabindex="-1" aria-hidden="true">
+      <input type="file" class="file-in" id="videoLib" accept="video/*" tabindex="-1" aria-hidden="true">
 
       <button type="submit" class="a h hot tap" style="--x:342;--y:1462;--w:608;--h:115" aria-label="Send your wishes — ส่งคำอวยพร"></button>
     </form>
@@ -296,7 +299,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 <!-- กล้องอัดวิดีโออวยพร -->
 <div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="อัดวิดีโออวยพร">
   <video id="camView" playsinline muted autoplay></video>
-  <div class="cam-msg" id="camMsg"></div>
+  <div class="cam-msg" id="camMsg">เปิดกล้องในหน้านี้ไม่ได้<br>กดปุ่มด้านล่างเพื่ออัดด้วยกล้องของเครื่อง<br>หรือกด “เลือกวิดีโอจากเครื่อง”<button type="button" id="camNative">อัดด้วยกล้องของเครื่อง</button></div>
   <div class="cam-top">
     <button type="button" class="cam-ic" id="camClose" aria-label="ปิด">✕</button>
     <span class="cam-time" id="camTime">1:00</span>
@@ -333,7 +336,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 /* ============================================================
    ตั้งค่าตรงนี้ที่เดียว
    ============================================================ */
-const CONFIG = {
+window.CONFIG = {
   date: '2027-01-14T15:29:00+07:00',               // เวลาที่นับถอยหลังไปถึง (เริ่มพิธีแห่ขันหมาก)
   mapUrl: 'https://maps.app.goo.gl/vnC4rqMxVxqcTJpw9',
   lineUrl: 'https://lin.ee/uwWii1c',
@@ -351,8 +354,14 @@ const CONFIG = {
 </script>
 
 <script>
-const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
-const C = CONFIG, when = new Date(C.date);
+/* ห่อทั้งหมดไว้ในฟังก์ชัน: เบราว์เซอร์ในแอป (LINE, Facebook ฯลฯ) ฉีดสคริปต์ของตัวเองเข้ามาในหน้า
+   ถ้าชื่อตัวแปรชนกัน สคริปต์ทั้งก้อนจะไม่ทำงานและกดส่งอะไรไม่ได้เลย
+   ส่วนตกแต่ง (เพลง/นับถอยหลัง/รูป) แยกด้วย safe() — พังส่วนไหนก็ไม่กระทบแบบฟอร์ม */
+(function () {
+'use strict';
+const $ = s => document.querySelector(s), $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const C = window.CONFIG, when = new Date(C.date);
+const safe = (name, fn) => { try { fn(); } catch (err) { console.error('[' + name + ']', err); } };
 
 $('#mapBtn').href = C.mapUrl;
 $('#lineBtn').href = C.lineUrl;
@@ -362,7 +371,8 @@ let tt;
 function toast(msg, ms = 3000) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), ms); }
 
 /* ---------- นับถอยหลัง ---------- */
-const pad = n => String(n).padStart(2, '0');
+const pad = n => (n < 10 ? '0' : '') + n;
+safe('countdown', () => {
 function tick() {
   const s = Math.max(0, Math.floor((when - Date.now()) / 1000));
   $('#cd-d').textContent = pad(Math.floor(s / 86400));
@@ -371,10 +381,12 @@ function tick() {
   $('#cd-s').textContent = pad(s % 60);
 }
 tick(); setInterval(tick, 1000);
+});
 
 /* ---------- เพลง ----------
    เบราว์เซอร์ไม่ยอมให้เล่นเสียงจนกว่าจะมีการแตะหน้าจอ จึงเริ่มเพลงตอนแตะครั้งแรก
    ระหว่างเล่น แผ่นเสียงหมุนและมีป้ายชื่อเพลง · กดแผ่นเสียงเพื่อหยุด/เล่นต่อ      */
+safe('music', () => {
 const audio = $('#music'), vinyl = $('#vinyl');
 function layoutRing() {
   const box = $('#nowPlaying'), size = box.clientWidth; if (!size) return;
@@ -393,12 +405,12 @@ function layoutRing() {
   }
   box.innerHTML = html;
 }
-layoutRing(); addEventListener('resize', layoutRing);
+safe('ring', layoutRing); addEventListener('resize', layoutRing);
 if (document.fonts && document.fonts.load) document.fonts.load('16px SovStation', C.songTitle + C.songArtist).then(layoutRing, () => {});
 vinyl.setAttribute('aria-label', `เปิด/ปิดเพลง ${C.songTitle} — ${C.songArtist}`);
 audio.addEventListener('play', () => vinyl.classList.add('playing'));
 audio.addEventListener('pause', () => vinyl.classList.remove('playing'));
-const playMusic = () => { if (!audio.src) audio.src = C.music; return audio.play(); };
+const playMusic = () => { if (!audio.src) audio.src = C.music; return Promise.resolve(audio.play()); };
 let autoAt = 0;
 vinyl.addEventListener('click', () => {
   if (performance.now() - autoAt < 700) return;      // การแตะครั้งนี้เพิ่งเริ่มเพลงเอง ไม่ต้องสลับซ้ำ
@@ -421,18 +433,22 @@ document.addEventListener('visibilitychange', () => {
   else if (resumeOnShow) { resumeOnShow = false; playMusic().catch(() => {}); }
 });
 window.addEventListener('pagehide', () => audio.pause());
+});
 // กันซูมด้วยการถ่างนิ้วบน iOS (Safari ไม่สนใจ user-scalable=no)
 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
 /* ---------- เลื่อนแล้วค่อย ๆ โผล่ ---------- */
-const io = new IntersectionObserver(es => {
-  es.filter(e => e.isIntersecting)
-    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-    .forEach((e, i) => { e.target.style.setProperty('--d', (i * 0.12) + 's'); e.target.classList.add('in'); io.unobserve(e.target); });
-}, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
-$$('.reveal:not(.in)').forEach(el => io.observe(el));
+try {
+  const io = new IntersectionObserver(es => {
+    es.filter(e => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+      .forEach((e, i) => { e.target.style.setProperty('--d', (i * 0.12) + 's'); e.target.classList.add('in'); io.unobserve(e.target); });
+  }, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
+  $$('.reveal:not(.in)').forEach(el => io.observe(el));
+} catch (err) { console.error(err); $$('.reveal').forEach(el => el.classList.add('in')); }   // ไม่รองรับ → แสดงทุกอย่างเลย (ไม่งั้นแบบฟอร์มจะมองไม่เห็น)
 
 /* ---------- ดูรูปใหญ่ 3 รูป ---------- */
+safe('lightbox', () => {
 const lb = $('#lightbox'); let li = 0;
 function showPhoto(i) {
   li = (i + C.photos.length) % C.photos.length;
@@ -457,15 +473,31 @@ lb.addEventListener('touchend', e => {
   if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null;
   if (Math.abs(dx) > 40) showPhoto(li + (dx < 0 ? 1 : -1));
 });
+});
 
 /* ---------- ส่งข้อมูลเข้าเซิร์ฟเวอร์ ---------- */
-async function api(path, body) {
-  const res = await fetch('/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  let out = null; try { out = await res.json(); } catch (e) { /* ไม่ใช่ JSON */ }
-  if (!res.ok || !out || !out.ok) { const err = new Error((out && out.error) || 'HTTP ' + res.status); err.shown = !!(out && out.error); throw err; }
-  return out;
+/* ใช้ XMLHttpRequest แทน fetch: มีในเบราว์เซอร์ในแอปทุกตัว ตั้งเวลาหมดได้ และส่งไฟล์เป็นชิ้นได้เสถียรกว่า */
+function send(method, url, body, type, timeout, hold) {
+  return new Promise((ok, no) => {
+    const x = new XMLHttpRequest();
+    x.open(method, url, true);
+    x.setRequestHeader('Content-Type', type);
+    x.timeout = timeout;
+    x.onload = () => {
+      let out = null; try { out = JSON.parse(x.responseText); } catch (e) { /* ไม่ใช่ JSON */ }
+      if (x.status >= 200 && x.status < 300 && out && out.ok) return ok(out);
+      const err = new Error((out && out.error) || 'HTTP ' + x.status); err.shown = !!(out && out.error); err.status = x.status; no(err);
+    };
+    x.onerror = () => no(new Error('network'));
+    x.ontimeout = () => no(new Error('timeout'));
+    x.onabort = () => no(new Error('abort'));
+    if (hold) hold.xhr.push(x);
+    x.send(body);
+  });
 }
-const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+const api = (path, body) => send('POST', '/api/' + path, JSON.stringify(body), 'application/json', 30000);
+// ข้อความจากเซิร์ฟเวอร์แสดงตรง ๆ · นอกนั้นแนบสาเหตุสั้น ๆ ไว้ท้ายข้อความ จะได้รู้ว่าติดที่อะไร
+const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' + (e && e.message ? ' (' + String(e.message).slice(0, 40) + ')' : '');
 
 /* ปุ่มบวก/ลบ จำนวนคน */
 const cnt = $('#r-count'), CMIN = 1, CMAX = 20;
@@ -497,7 +529,7 @@ $('#rsvpForm').addEventListener('submit', async e => {
 /* ---------- อัปโหลดไฟล์: ส่งตรงเข้าเซิร์ฟเวอร์เป็นชิ้น ครั้งละ 3 ชิ้นพร้อมกัน ----------
    เริ่มอัปโหลดทันทีที่แนบ ระหว่างที่แขกยังพิมพ์คำอวยพรอยู่ พอกดส่งจึงแทบไม่ต้องรอ   */
 function startUpload(blob, kind, ext, onProgress) {
-  const ctl = new AbortController();
+  const hold = { xhr: [], aborted: false };
   const promise = (async () => {
     const { id, chunk } = await api('upload/start', { kind, ext, size: blob.size });
     const offs = []; for (let o = 0; o < blob.size; o += chunk) offs.push(o);
@@ -507,11 +539,11 @@ function startUpload(blob, kind, ext, onProgress) {
         const o = offs[next++], part = blob.slice(o, o + chunk);
         for (let attempt = 0; ; attempt++) {
           try {
-            const r = await fetch(`/api/upload/${id}?offset=${o}`, { method: 'PUT', body: part, signal: ctl.signal, headers: { 'Content-Type': 'application/octet-stream' } });
-            if (!r.ok) throw new Error('chunk ' + r.status);
+            if (hold.aborted) throw new Error('abort');
+            await send('PUT', `/api/upload/${id}?offset=${o}`, part, 'application/octet-stream', 120000, hold);
             break;
           } catch (err) {
-            if (ctl.signal.aborted || attempt >= 3) throw err;
+            if (hold.aborted || attempt >= 3 || err.status === 404) throw err;
             await new Promise(ok => setTimeout(ok, 900 * (attempt + 1)));
           }
         }
@@ -522,7 +554,7 @@ function startUpload(blob, kind, ext, onProgress) {
     return id;
   })();
   promise.catch(() => {});
-  return { promise, abort: () => ctl.abort() };
+  return { promise, abort: () => { hold.aborted = true; hold.xhr.forEach(x => { try { x.abort(); } catch (e) { /* จบไปแล้ว */ } }); } };
 }
 
 const att = { photo: null, video: null };          // { blob, ext, up, pct, state: 'busy' | 'done' | 'err' }
@@ -551,7 +583,10 @@ const extOf = (file, fallback) => { const m = /\.([a-z0-9]{2,5})$/i.exec(file.na
 /* รูป: ย่อก่อนส่ง (ด้านยาวไม่เกิน 2000px) */
 async function shrink(file) {
   try {
-    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const bmp = await Promise.race([
+      createImageBitmap(file, { imageOrientation: 'from-image' }),
+      new Promise((_, no) => setTimeout(() => no(new Error('slow')), 8000)),
+    ]);
     const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
     const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
     cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
@@ -564,6 +599,7 @@ $('#pickPhoto').addEventListener('click', () => $('#photoInput').click());
 $('#photoInput').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
+  if (f.size > 25 * 1048576) { toast('รูปใหญ่เกิน 25MB กรุณาเลือกรูปอื่น', 4500); return; }
   const s = await shrink(f);
   setAttachment('photo', s.blob, s.ext); toast('แนบรูปแล้ว');
 });
@@ -578,7 +614,7 @@ for (const id of ['#videoInput', '#videoLib']) $(id).addEventListener('change', 
 
 /* ---------- กล้องในหน้าเว็บ: Full HD, กล้องหน้าแสดงแบบกระจก, จำกัดเวลา ---------- */
 const cam = $('#cam'), camView = $('#camView');
-let camStream = null, camRec = null, camChunks = [], camBlob = null, camUrl = null, camTimer = null, camFacing = 'user', camLeft = 0;
+let camStream = null, camRec = null, camChunks = [], camBlob = null, camUrl = null, camTimer = null, camFacing = 'user', camLeft = 0, camSeq = 0;
 const canRecord = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
 const fmt = s => Math.floor(s / 60) + ':' + pad(s % 60);
 function pickMime() {
@@ -593,17 +629,22 @@ async function startStream() {
   cam.classList.toggle('mirror', camFacing === 'user');
   camView.loop = false; camView.removeAttribute('src'); camView.muted = true;
   $('#camTime').textContent = fmt(C.videoSeconds); $('#camHint').textContent = `ยาวสุด ${C.videoSeconds} วินาที`;
+  // เบราว์เซอร์ในแอป (เช่น LINE) บางเครื่องไม่ให้หน้าเว็บใช้กล้อง: อาจปฏิเสธทันทีหรือเงียบไปเฉย ๆ
+  // → รอไม่เกิน 6 วินาทีแล้วเสนอ "อัดด้วยกล้องของเครื่อง" แทน (ถ้ากล้องมาทีหลังก็ใช้ต่อได้เลย)
+  const seq = ++camSeq, mine = () => seq === camSeq && cam.classList.contains('on');
+  const wait = setTimeout(() => { if (mine() && !camStream) cam.classList.add('msg'); }, 6000);
   try {
-    camStream = await navigator.mediaDevices.getUserMedia({
+    const s = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true },
       video: { facingMode: camFacing, width: { ideal: C.videoWidth }, height: { ideal: C.videoHeight }, frameRate: { ideal: 30 } },
     });
-    if (!cam.classList.contains('on')) { stopStream(); return; }
+    clearTimeout(wait);
+    if (!mine()) { s.getTracks().forEach(t => t.stop()); return; }
+    camStream = s; cam.classList.remove('msg');
     camView.srcObject = camStream; camView.play().catch(() => {});
   } catch (err) {
-    console.error(err);
-    $('#camMsg').innerHTML = 'เปิดกล้องไม่ได้<br>กรุณาอนุญาตการใช้กล้องและไมโครโฟน<br>หรือกด “เลือกวิดีโอจากเครื่อง” ด้านล่าง';
-    cam.classList.add('msg');
+    clearTimeout(wait); console.error(err);
+    if (mine()) cam.classList.add('msg');
   }
 }
 function openCam() {
@@ -613,7 +654,7 @@ function openCam() {
 }
 function closeCam() {
   if (!cam.classList.contains('on')) return;
-  clearInterval(camTimer);
+  camSeq++; clearInterval(camTimer);
   if (camRec && camRec.state !== 'inactive') { camRec.onstop = null; camRec.stop(); }
   camRec = null; stopStream(); clearClip();
   camView.pause(); camView.srcObject = null; camView.removeAttribute('src'); camView.load();
@@ -622,7 +663,8 @@ function closeCam() {
 function startRec() {
   if (!camStream) return;
   const mimeType = pickMime();
-  try { camRec = new MediaRecorder(camStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: C.videoBitrate, audioBitsPerSecond: 128000 }); }
+  const opt = { videoBitsPerSecond: C.videoBitrate, audioBitsPerSecond: 128000 }; if (mimeType) opt.mimeType = mimeType;
+  try { camRec = new MediaRecorder(camStream, opt); }
   catch (e) { camRec = new MediaRecorder(camStream); }
   camChunks = [];
   camRec.ondataavailable = e => { if (e.data && e.data.size) camChunks.push(e.data); };
@@ -653,6 +695,7 @@ $('#camClose').addEventListener('click', closeCam);
 $('#camRec').addEventListener('click', () => (camRec && camRec.state === 'recording') ? stopRec() : startRec());
 $('#camFlip').addEventListener('click', () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; startStream(); });
 $('#camLib').addEventListener('click', () => $('#videoLib').click());
+$('#camNative').addEventListener('click', () => $('#videoInput').click());
 $('#camRetake').addEventListener('click', startStream);
 $('#camUse').addEventListener('click', () => {
   const blob = camBlob; if (!blob) return;
@@ -689,6 +732,7 @@ $('#wishForm').addEventListener('submit', async e => {
   wishBusy = false;
 });
 $('#wishAgain').addEventListener('click', () => $('#wishThanks').classList.remove('on'));
+})();
 </script>
 </body>
 </html>
