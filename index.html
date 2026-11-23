@@ -12,6 +12,7 @@
 <link rel="preload" as="image" href="assets/bg-lace.webp" fetchpriority="high">
 <link rel="preload" as="font" type="font/woff2" href="assets/cronde.woff2" crossorigin>
 <style>
+@font-face{font-family:'SovStation';src:url('assets/sov-station.woff2') format('woff2');font-display:swap}
 @font-face{font-family:'Cronde';src:url('assets/cronde.woff2') format('woff2');font-display:swap}
 
 :root{
@@ -77,11 +78,11 @@ a.a, button.a{display:block}
 .vinyl.hint::before{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--wine);opacity:0;animation:ping 2.4s var(--ease-out) infinite}   /* ชวนให้แตะเปิดเพลง */
 @keyframes ping{0%{scale:1;opacity:.55}100%{scale:1.45;opacity:0}}
 @keyframes spin{to{rotate:360deg}}
-/* ชื่อเพลงวนรอบแผ่นเสียง (อยู่นิ่ง ไม่หมุนตามแผ่น) โผล่ตอนเพลงกำลังเล่น */
-.np{pointer-events:none;overflow:visible;opacity:0;transition:opacity .8s var(--ease-soft)}
-.np text{font-family:var(--thai);font-size:15px;letter-spacing:.5px;fill:var(--wine)}
-.np .en{letter-spacing:3.2px;font-size:12.5px}
-.np .dot{letter-spacing:5px}
+/* ชื่อเพลงวนรอบแผ่นเสียง (อยู่นิ่ง ไม่หมุนตามแผ่น) โผล่ตอนเพลงกำลังเล่น
+   วางทีละพยางค์ด้วย JS (layoutRing) เพื่อให้สระ/วรรณยุกต์ไทยไม่เพี้ยน */
+.np{height:calc(var(--w) * var(--u));pointer-events:none;opacity:0;transition:opacity .8s var(--ease-soft);
+  font-family:'SovStation', var(--thai);color:var(--wine)}
+.np span{position:absolute;left:50%;top:50%;transform-origin:0 0;line-height:1;white-space:pre}
 .vinyl.playing ~ .np{opacity:1}
 
 /* นับถอยหลัง */
@@ -148,12 +149,14 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .lightbox{position:fixed;inset:0;z-index:80;background:rgba(18,15,10,.9);display:flex;align-items:center;justify-content:center;
   opacity:0;visibility:hidden;transition:opacity .35s var(--ease-soft), visibility 0s .35s}
 .lightbox.on{opacity:1;visibility:visible;transition:opacity .35s var(--ease-soft), visibility 0s}
-.lightbox figure{background:#f4f1e8;padding:10px 10px 14px;box-shadow:0 20px 50px rgba(0,0,0,.5);width:min(88vw, 440px);scale:.94;transition:scale .45s var(--ease-out)}
+.lightbox figure{background:#f4f1e8;padding:10px 10px 12px;box-shadow:0 20px 50px rgba(0,0,0,.5);width:min(88vw, 440px);scale:.94;transition:scale .45s var(--ease-out)}
 .lightbox.on figure{scale:1}
 .lightbox img{width:100%;height:auto;aspect-ratio:512/489;object-fit:cover;background:#d9d9de}
-.lightbox figcaption{text-align:center;font-family:'Cronde',serif;font-size:15px;letter-spacing:.2em;padding-top:10px;color:#4a3f35}
-.lb-btn{position:absolute;top:50%;translate:0 -50%;width:44px;height:64px;color:#fff;font-size:34px;line-height:1}
-.lb-prev{left:max(4px, calc(50% - 280px))}.lb-next{right:max(4px, calc(50% - 280px))}
+.lb-nav{display:flex;align-items:center;justify-content:center;gap:22px;padding-top:12px}
+.lb-btn{width:46px;height:46px;border-radius:50%;background:#604330;display:grid;place-items:center;box-shadow:0 2px 6px rgba(40,25,15,.3)}
+.lb-btn svg{width:20px;height:20px;stroke:#f5f0e4;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.lb-btn:active{scale:.92}
+.lb-count{font-family:'Cronde',serif;font-size:17px;letter-spacing:.18em;color:#4a3f35;min-width:64px;text-align:center}
 .lb-close{position:absolute;right:14px;top:14px;width:44px;height:44px;color:#fff;font-size:26px}
 
 /* ---------- กล้องอัดวิดีโออวยพร ---------- */
@@ -208,10 +211,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <img class="a" style="--x:333;--y:312;--w:227" src="assets/card-welcome.webp" alt="Welcome to the beginning of our next chapter" width="560" height="767">
       <img class="a" style="--x:262;--y:422;--w:180" src="assets/swan.webp" alt="" width="420" height="277">
       <button class="a vinyl bob" id="vinyl" style="--x:415;--y:470;--w:136" aria-label="เปิด/ปิดเพลง"></button>
-      <svg class="a np" id="nowPlaying" style="--x:391;--y:446;--w:184" viewBox="0 0 184 184" aria-hidden="true">
-        <path id="npArc" d="M92,8 a84,84 0 1,1 0,168 a84,84 0 1,1 0,-168" fill="none"/>
-        <text><textPath href="#npArc" startOffset="6.5%"><tspan data-song></tspan><tspan class="dot"> · </tspan><tspan class="en" data-artist></tspan></textPath></text>
-      </svg>
+      <div class="a np" id="nowPlaying" style="--x:391;--y:446;--w:184" aria-hidden="true"></div>
       <img class="a heart" style="--x:185;--y:505;--w:293" src="assets/heart.webp" alt="Chenisa &amp; Sranon" width="720" height="571">
       <img class="a" style="--x:130;--y:422;--w:392;pointer-events:none" src="assets/env-front.webp" alt="" width="860" height="935">
       <img class="a flowers" style="--x:435;--y:612;--w:205" src="assets/flowers.webp" alt="" width="520" height="1091">
@@ -241,7 +241,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
     <img class="bg" src="assets/bg-garden.webp" alt="" width="945" height="1664" loading="lazy">
     <img class="a reveal" style="--x:199;--y:114;--w:542" src="assets/location.webp" alt="Location — สักกายะ | SAK-KA-YA" width="542" height="194" loading="lazy">
     <a class="a tap reveal bob" id="mapBtn" style="--bd:.3s;--x:275;--y:353;--w:393" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img src="assets/btn-maps.webp" alt="" width="860" height="147" loading="lazy"></a>
-    <img class="a reveal" style="--x:665;--y:312;--w:97;pointer-events:none" src="assets/click.webp" alt="" width="260" height="180" loading="lazy">
+    <img class="a reveal bob" style="--bd:.6s;--x:665;--y:312;--w:97;pointer-events:none" src="assets/click.webp" alt="" width="260" height="180" loading="lazy">
     <img class="a reveal" style="--x:100;--y:465;--w:755" src="assets/plan.webp" alt="What's the plan? 15:29 พิธีแห่ขันหมาก · 16:19 พิธีรดน้ำสังข์ · 18:09 ฉลองมงคลสมรส" width="1100" height="1514" loading="lazy">
   </section>
 
@@ -250,6 +250,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
     <img class="bg" src="assets/bg-theme.webp" alt="Theme colors — Outdoor Garden (งานแต่งในสวนกลางแจ้ง)" width="1000" height="1451" loading="lazy">
     <img class="a reveal" style="--x:445;--y:468;--w:475" src="assets/tray-join.webp" alt="Will you join us?" width="812" height="1157" loading="lazy">
     <img class="a reveal" style="--x:38;--y:863;--w:382" src="assets/clipboard.webp" alt="ไม่อยากพลาดความสนุกกดติดตามได้ที่ LINE OFFICIAL · กรอกข้อมูลเพื่อตอบรับเข้าร่วมงาน · ขอความกรุณาตอบรับภายใน 5 ธ.ค. 2569" width="797" height="1289" loading="lazy">
+    <img class="a reveal bob deco" style="--bd:.2s;--x:75.9;--y:1149.6;--w:87.2" src="assets/click2.webp" alt="" width="182" height="128" loading="lazy">
     <a class="a tap reveal bob" id="lineBtn" style="--bd:.5s;--x:183;--y:1160;--w:124" target="_blank" rel="noopener" aria-label="LINE Official"><img src="assets/line.webp" alt="" width="300" height="300" loading="lazy"></a>
 
     <img class="a reveal" style="--x:684;--y:1150;--w:246" src="assets/swan-blue-non.webp" alt="" width="520" height="481" loading="lazy">
@@ -315,9 +316,14 @@ input.wish-field{padding-top:0;padding-bottom:0}
 <!-- ดูรูปใหญ่ -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="รูปถ่าย">
   <button class="lb-close" id="lbClose" aria-label="ปิด">✕</button>
-  <button class="lb-btn lb-prev" id="lbPrev" aria-label="รูปก่อนหน้า">‹</button>
-  <figure><img id="lbImg" src="" alt="Chenisa & Sranon"><figcaption id="lbCap"></figcaption></figure>
-  <button class="lb-btn lb-next" id="lbNext" aria-label="รูปถัดไป">›</button>
+  <figure>
+    <img id="lbImg" src="" alt="Chenisa & Sranon">
+    <div class="lb-nav">
+      <button type="button" class="lb-btn" id="lbPrev" aria-label="รูปก่อนหน้า"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="lb-count" id="lbCap"></span>
+      <button type="button" class="lb-btn" id="lbNext" aria-label="รูปถัดไป"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </figure>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -370,7 +376,25 @@ tick(); setInterval(tick, 1000);
    เบราว์เซอร์ไม่ยอมให้เล่นเสียงจนกว่าจะมีการแตะหน้าจอ จึงเริ่มเพลงตอนแตะครั้งแรก
    ระหว่างเล่น แผ่นเสียงหมุนและมีป้ายชื่อเพลง · กดแผ่นเสียงเพื่อหยุด/เล่นต่อ      */
 const audio = $('#music'), vinyl = $('#vinyl');
-$('[data-song]').textContent = C.songTitle; $('[data-artist]').textContent = C.songArtist;
+function layoutRing() {
+  const box = $('#nowPlaying'), size = box.clientWidth; if (!size) return;
+  const R = size * 91 / 184, fs = size * 16.5 / 184;
+  const clusters = t => window.Intl && Intl.Segmenter ? [...new Intl.Segmenter('th', { granularity: 'grapheme' }).segment(t)].map(x => x.segment)
+    : (t.match(/[\s\S][ัิ-ฺ็-๎]*/g) || []);
+  const ctx = document.createElement('canvas').getContext('2d');
+  let ang = 18 * Math.PI / 180, html = '';              // เริ่มเยื้องขวาจากด้านบนเล็กน้อย วนตามเข็ม
+  for (const [text, k, track] of [[C.songTitle, 1, .04], ['  ·  ', 1, 0], [C.songArtist, .94, .22]]) {
+    const px = fs * k; ctx.font = `${px}px SovStation, sans-serif`;
+    for (const g of clusters(text)) {
+      const w = ctx.measureText(g).width + track * px, mid = ang + w / 2 / R;
+      html += `<span style="font-size:${px.toFixed(2)}px;transform:rotate(${mid.toFixed(4)}rad) translateY(${(-R).toFixed(2)}px) translate(-50%,-50%)">${g.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span>`;
+      ang += w / R;
+    }
+  }
+  box.innerHTML = html;
+}
+layoutRing(); addEventListener('resize', layoutRing);
+if (document.fonts && document.fonts.load) document.fonts.load('16px SovStation', C.songTitle + C.songArtist).then(layoutRing, () => {});
 vinyl.setAttribute('aria-label', `เปิด/ปิดเพลง ${C.songTitle} — ${C.songArtist}`);
 audio.addEventListener('play', () => vinyl.classList.add('playing'));
 audio.addEventListener('pause', () => vinyl.classList.remove('playing'));
@@ -394,7 +418,7 @@ if (C.autoplay) {
 let resumeOnShow = false;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { resumeOnShow = !audio.paused; audio.pause(); }
-  else if (resumeOnShow) { resumeOnShow = false; if (!document.querySelector('#cam.on')) playMusic().catch(() => {}); }
+  else if (resumeOnShow) { resumeOnShow = false; playMusic().catch(() => {}); }
 });
 window.addEventListener('pagehide', () => audio.pause());
 // กันซูมด้วยการถ่างนิ้วบน iOS (Safari ไม่สนใจ user-scalable=no)
@@ -584,7 +608,6 @@ async function startStream() {
 function openCam() {
   if (!canRecord()) { $('#videoInput').click(); return; }      // เบราว์เซอร์เก่า → ใช้กล้องของมือถือ
   cam.classList.add('on'); document.body.classList.add('locked');
-  audio.pause();                                                // หยุดเพลงไม่ให้เสียงเข้าไมค์
   startStream();
 }
 function closeCam() {
