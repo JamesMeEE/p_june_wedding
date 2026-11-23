@@ -8,20 +8,18 @@
 <meta property="og:title" content="June & Non — The Wedding">
 <meta property="og:description" content="Please join us for our wedding celebration · 14.01.2027">
 <meta name="theme-color" content="#f1ece2">
-<link rel="preload" as="image" href="assets/bg-lace.webp">
-<link rel="preload" as="font" type="font/otf" href="assets/CRONDE.otf" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%237a1414' d='M16 28C7 21 3 16.5 3 11.2 3 7.2 6.1 4.5 9.6 4.5c2.6 0 4.9 1.5 6.4 4 1.5-2.5 3.8-4 6.4-4 3.5 0 6.6 2.7 6.6 6.7C29 16.5 25 21 16 28z'/%3E%3C/svg%3E">
+<link rel="preload" as="image" href="assets/bg-lace.webp" fetchpriority="high">
+<link rel="preload" as="font" type="font/woff2" href="assets/cronde.woff2" crossorigin>
 <style>
-@font-face{font-family:'Cronde';src:url('assets/CRONDE.otf') format('opentype');font-display:swap}
+@font-face{font-family:'Cronde';src:url('assets/cronde.woff2') format('woff2');font-display:swap}
 
 :root{
   --cw:min(100vw, 480px);         /* ความกว้างการ์ด */
   --cream:#f5f3e9;
   --ink:#2a2420;
   --wine:#5a0d0d;
-  --thai:'Sarabun', system-ui, sans-serif;
+  --thai:system-ui, -apple-system, 'Segoe UI', 'Noto Sans Thai', 'Thonburi', 'Leelawadee UI', sans-serif;
   --ease-out:cubic-bezier(.22,1,.36,1);
   --ease-soft:cubic-bezier(.4,0,.2,1);
 }
@@ -72,6 +70,23 @@ a.a, button.a{display:block}
   background:conic-gradient(from 20deg,rgba(255,255,255,.2),transparent 14%,transparent 48%,rgba(255,255,255,.14) 54%,transparent 66%,transparent)}
 .vinyl.playing{animation:spin 4s linear infinite}
 @keyframes spin{to{rotate:360deg}}
+/* ป้ายชื่อเพลง โผล่ตอนเพลงกำลังเล่น */
+.np{
+  position:absolute;left:min(calc(556 * var(--u)), calc(100% - 94px));top:calc(500 * var(--u));pointer-events:none;
+  display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;
+  background:rgba(250,247,238,.94);box-shadow:0 2px 8px rgba(60,40,20,.22);color:var(--wine);
+  font-family:Georgia, 'Times New Roman', var(--thai);font-size:11px;line-height:1.25;white-space:nowrap;
+  opacity:0;translate:-8px 0;transition:opacity .5s var(--ease-soft), translate .6s var(--ease-out);
+}
+.np b{display:block;font-weight:600}
+.np small{display:block;font-size:9px;letter-spacing:.14em;opacity:.8}
+.vinyl.playing ~ .np{opacity:1;translate:0 0}
+.eq{display:flex;align-items:flex-end;gap:2px;height:12px}
+.eq i{width:2px;height:100%;background:currentColor;border-radius:1px;transform-origin:bottom;animation:eq .9s ease-in-out infinite alternate;animation-play-state:paused}
+.eq i:nth-child(2){animation-duration:.6s;animation-delay:-.3s}
+.eq i:nth-child(3){animation-duration:.75s;animation-delay:-.5s}
+.vinyl.playing ~ .np .eq i{animation-play-state:running}
+@keyframes eq{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
 
 /* นับถอยหลัง */
 .cd{position:absolute;left:0;right:0;top:calc(1866 * var(--u));height:calc(72 * var(--u));
@@ -96,6 +111,14 @@ a.a, button.a{display:block}
 .field:focus{background:rgba(255,255,255,.85);box-shadow:0 0 0 2px rgba(96,67,48,.5)}
 input[type=number].field::-webkit-outer-spin-button,input[type=number].field::-webkit-inner-spin-button{-webkit-appearance:none}
 input[type=number].field{-moz-appearance:textfield}
+.step{
+  height:calc(var(--w) * var(--u));border-radius:50%;background:#604330;color:#f5f0e4;
+  font-family:Georgia, 'Times New Roman', serif;font-size:calc(40 * var(--u));line-height:1;
+  display:grid;place-items:center;box-shadow:0 calc(2 * var(--u)) calc(5 * var(--u)) rgba(40,25,15,.35), inset 0 0 0 calc(2 * var(--u)) rgba(245,240,228,.35);
+}
+.step::after{content:"";position:absolute;inset:-9px}      /* ขยายพื้นที่กดให้กดง่ายบนมือถือ */
+.step:disabled{opacity:.45}
+.field.num{text-align:center;padding:0;font-family:Georgia, 'Times New Roman', serif;font-weight:600}
 .done-msg{display:none;place-items:center;text-align:center;padding:calc(20 * var(--u));background:rgba(110,110,110,.92);border-radius:calc(30 * var(--u));color:#fff;font-size:calc(30 * var(--u));line-height:1.5;font-weight:500}
 .done-msg.on{display:grid}
 
@@ -114,6 +137,8 @@ input.wish-field{padding-top:0;padding-bottom:0}
   background:#3c8f4f;color:#fff;font-size:calc(40 * var(--u));line-height:calc(64 * var(--u));text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.35);
   scale:0;transition:scale .35s var(--ease-out)}
 .badge.on{scale:1}
+.badge.busy{background:#604330;font-size:calc(24 * var(--u));width:auto;min-width:calc(64 * var(--u));padding:0 calc(12 * var(--u));border-radius:999px;font-variant-numeric:tabular-nums}
+.badge.err{background:#a3271f}
 .pick{position:absolute}
 .sending{position:absolute;inset:0;display:none;place-items:center;background:rgba(30,26,18,.6);color:#fff;text-align:center;font-size:17px;line-height:1.7;z-index:5;padding:24px}
 .sending.on{display:grid}
@@ -135,6 +160,31 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .lb-prev{left:max(4px, calc(50% - 280px))}.lb-next{right:max(4px, calc(50% - 280px))}
 .lb-close{position:absolute;right:14px;top:14px;width:44px;height:44px;color:#fff;font-size:26px}
 
+/* ---------- กล้องอัดวิดีโออวยพร ---------- */
+.cam{position:fixed;inset:0;z-index:90;background:#000;display:none;color:#fff}
+.cam.on{display:block}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}   /* ไม่กลับด้าน: เห็นแบบไหนบันทึกแบบนั้น */
+.cam-top,.cam-bottom,.cam-review{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+.cam-top{top:0;padding-top:max(14px, env(safe-area-inset-top));background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.cam-bottom,.cam-review{bottom:0;padding-bottom:max(22px, env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.cam-ic{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;font-size:22px;line-height:1}
+.cam-time{font-family:'Cronde',serif;font-size:22px;letter-spacing:.06em;padding:4px 14px;border-radius:999px;background:rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
+.cam.recording .cam-time{background:#b3261e}
+.cam-side{width:104px;font-size:13px;color:#fff;text-align:left;line-height:1.3}
+.cam-side:last-child{text-align:right}
+.cam-rec{width:74px;height:74px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center}
+.cam-rec::before{content:"";width:56px;height:56px;border-radius:50%;background:#e0352b;transition:all .25s var(--ease-out)}
+.cam.recording .cam-rec::before{width:28px;height:28px;border-radius:7px}
+.cam-review{display:none;gap:12px}
+.cam-review button{flex:1;padding:14px;border-radius:999px;font-size:15px;color:#fff;border:1px solid #fff}
+.cam-review .use{background:#f5f0e4;color:#3a2a1e;border-color:#f5f0e4;font-weight:600}
+.cam.review .cam-review{display:flex}
+.cam.review .cam-bottom,.cam.review #camFlip,.cam.recording #camFlip,.cam.recording #camLib{visibility:hidden}
+.cam.review .cam-bottom{display:none}
+.cam-msg{position:absolute;left:24px;right:24px;top:50%;translate:0 -50%;text-align:center;font-size:15px;line-height:1.7;display:none}
+.cam.msg .cam-msg{display:block}
+.cam.msg .cam-rec{visibility:hidden}
+
 .toast{position:fixed;left:50%;bottom:28px;translate:-50% 20px;background:rgba(30,27,20,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;
   opacity:0;transition:opacity .3s, translate .3s;z-index:99;max-width:90vw;text-align:center;pointer-events:none}
 .toast.on{opacity:1;translate:-50% 0}
@@ -152,7 +202,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
   <!-- ================= หน้า 1–2 ================= -->
   <section class="page p-lace">
     <h1 class="sr">June &amp; Non — The Wedding · Chenisa &amp; Sranon · 14.01.2027</h1>
-    <img class="a reveal in" style="--x:235;--y:82;--w:272" src="assets/logo.webp" alt="June Non — The Wedding" width="640" height="490">
+    <img class="a reveal in" style="--x:235;--y:82;--w:272" fetchpriority="high" src="assets/logo.webp" alt="June Non — The Wedding" width="640" height="490">
 
     <!-- ซองจดหมาย -->
     <div class="envelope reveal" id="envelope">
@@ -161,6 +211,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <img class="a" style="--x:333;--y:312;--w:227" src="assets/card-welcome.webp" alt="Welcome to the beginning of our next chapter" width="560" height="767">
       <img class="a" style="--x:262;--y:422;--w:180" src="assets/swan.webp" alt="" width="420" height="277">
       <button class="a vinyl" id="vinyl" style="--x:415;--y:470;--w:136" aria-label="เปิด/ปิดเพลง"></button>
+      <div class="np" id="nowPlaying" aria-live="polite"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span><b data-song></b><small data-artist></small></span></div>
       <img class="a heart" style="--x:185;--y:505;--w:293" src="assets/heart.webp" alt="Chenisa &amp; Sranon" width="720" height="571">
       <img class="a" style="--x:130;--y:422;--w:392;pointer-events:none" src="assets/env-front.webp" alt="" width="860" height="935">
       <img class="a flowers" style="--x:435;--y:612;--w:205" src="assets/flowers.webp" alt="" width="520" height="1091">
@@ -209,7 +260,9 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <label for="r-name" class="a" style="--x:482;--y:1183;--w:318"><img src="assets/label-name.webp" alt="ชื่อผู้ร่วมงาน & ผู้ติดตาม" width="700" height="93" loading="lazy"></label>
       <input class="a h field" style="--x:482;--y:1235;--w:388;--h:56" id="r-name" name="name" autocomplete="name" maxlength="120" required>
       <label for="r-count" class="a" style="--x:484;--y:1302;--w:128"><img src="assets/label-count.webp" alt="จำนวนคน" width="300" height="63" loading="lazy"></label>
-      <input class="a h field" style="--x:484;--y:1341;--w:168;--h:56" id="r-count" name="count" type="number" inputmode="numeric" min="1" max="20" required>
+      <button type="button" class="a step tap" id="cMinus" style="--x:484;--y:1340;--w:58" aria-label="ลดจำนวนคน">−</button>
+      <input class="a h field num" style="--x:556;--y:1341;--w:84;--h:56" id="r-count" name="count" type="number" inputmode="numeric" min="1" max="20" value="1" required>
+      <button type="button" class="a step tap" id="cPlus" style="--x:654;--y:1340;--w:58" aria-label="เพิ่มจำนวนคน">+</button>
       <button class="a tap" style="--x:590;--y:1420;--w:175" type="submit" aria-label="ส่งข้อมูล"><img src="assets/btn-submit.webp" alt="" width="420" height="140" loading="lazy"></button>
       <div class="a h done-msg" id="rsvpDone" style="--x:450;--y:1160;--w:452;--h:328" role="status">ได้รับข้อมูลแล้ว<br>ขอบคุณค่ะ แล้วพบกันวันงานนะคะ</div>
     </form>
@@ -226,6 +279,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
       <button type="button" class="a h hot tap" id="pickVideo" style="--x:730;--y:1240;--w:495;--h:205" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
       <input type="file" id="photoInput" accept="image/*" hidden>
       <input type="file" id="videoInput" accept="video/*" capture="user" hidden>
+      <input type="file" id="videoLib" accept="video/*" hidden>
 
       <button type="submit" class="a h hot tap" style="--x:342;--y:1462;--w:608;--h:115" aria-label="Send your wishes — ส่งคำอวยพร"></button>
     </form>
@@ -233,6 +287,26 @@ input.wish-field{padding-top:0;padding-bottom:0}
     <div class="thanks" id="wishThanks" role="status"><div><h3>Thank you</h3>ได้รับคำอวยพรแล้ว ขอบคุณมากนะคะ<br><button type="button" id="wishAgain">ส่งอีกครั้ง</button></div></div>
   </section>
 
+</div>
+
+<!-- กล้องอัดวิดีโออวยพร -->
+<div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="อัดวิดีโออวยพร">
+  <video id="camView" playsinline muted autoplay></video>
+  <div class="cam-msg" id="camMsg"></div>
+  <div class="cam-top">
+    <button type="button" class="cam-ic" id="camClose" aria-label="ปิด">✕</button>
+    <span class="cam-time" id="camTime">1:00</span>
+    <button type="button" class="cam-ic" id="camFlip" aria-label="สลับกล้องหน้า/หลัง">⟲</button>
+  </div>
+  <div class="cam-bottom">
+    <button type="button" class="cam-side" id="camLib">เลือกวิดีโอ<br>จากเครื่อง</button>
+    <button type="button" class="cam-rec" id="camRec" aria-label="เริ่ม/หยุดอัด"></button>
+    <span class="cam-side" id="camHint"></span>
+  </div>
+  <div class="cam-review">
+    <button type="button" id="camRetake">ถ่ายใหม่</button>
+    <button type="button" class="use" id="camUse">ใช้คลิปนี้</button>
+  </div>
 </div>
 
 <!-- ดูรูปใหญ่ -->
@@ -255,9 +329,14 @@ const CONFIG = {
   mapUrl: 'https://maps.app.goo.gl/vnC4rqMxVxqcTJpw9',
   lineUrl: 'https://lin.ee/uwWii1c',
   music: 'music/song.mp3',                         // วางไฟล์เพลงไว้ที่ music/song.mp3
+  songTitle: 'ชีวิตคืออะไร',
+  songArtist: 'THE TOYS',
+  autoplay: true,                                  // เริ่มเพลงเองเมื่อแขกแตะหน้าจอครั้งแรก
   photos: ['assets/photo1.webp', 'assets/photo2.webp', 'assets/photo3.webp'],
-  // URL ของ Google Apps Script (Web app) — ดูวิธีตั้งค่าใน apps-script/Code.gs
-  apiUrl: 'https://script.google.com/macros/s/AKfycbz5Eyh0wVvxX8yiP2rn4qxlmDApJGnAFjmUm5-b5LFGs_Ar2um8LRo_1V5be5mNh2vkBQ/exec',
+  // วิดีโออวยพร: Full HD ยาวสุด 60 วินาที
+  videoSeconds: 60,
+  videoWidth: 1920, videoHeight: 1080,
+  videoBitrate: 5000000,
   maxVideoMB: 200,
 };
 </script>
@@ -284,15 +363,27 @@ function tick() {
 }
 tick(); setInterval(tick, 1000);
 
-/* ---------- เพลง (กดแผ่นเสียง) ---------- */
+/* ---------- เพลง ----------
+   เบราว์เซอร์ไม่ยอมให้เล่นเสียงจนกว่าจะมีการแตะหน้าจอ จึงเริ่มเพลงตอนแตะครั้งแรก
+   ระหว่างเล่น แผ่นเสียงหมุนและมีป้ายชื่อเพลง · กดแผ่นเสียงเพื่อหยุด/เล่นต่อ      */
 const audio = $('#music'), vinyl = $('#vinyl');
+$('[data-song]').textContent = C.songTitle; $('[data-artist]').textContent = C.songArtist;
+vinyl.setAttribute('aria-label', `เปิด/ปิดเพลง ${C.songTitle} — ${C.songArtist}`);
 audio.addEventListener('play', () => vinyl.classList.add('playing'));
 audio.addEventListener('pause', () => vinyl.classList.remove('playing'));
+const playMusic = () => { if (!audio.src) audio.src = C.music; return audio.play(); };
+let autoAt = 0;
 vinyl.addEventListener('click', () => {
-  if (!audio.src) audio.src = C.music;
-  if (audio.paused) audio.play().catch(() => toast('ยังเล่นเพลงไม่ได้ (ไม่พบไฟล์เพลง)'));
+  if (performance.now() - autoAt < 700) return;      // การแตะครั้งนี้เพิ่งเริ่มเพลงเอง ไม่ต้องสลับซ้ำ
+  if (audio.paused) playMusic().catch(() => toast('ยังเล่นเพลงไม่ได้ (ไม่พบไฟล์เพลง)'));
   else audio.pause();
 });
+if (C.autoplay) {
+  const evs = ['pointerup', 'touchend', 'click', 'keydown'];
+  const stop = () => evs.forEach(ev => document.removeEventListener(ev, first, true));
+  const first = () => { autoAt = performance.now(); playMusic().then(stop).catch(() => { autoAt = 0; }); };
+  evs.forEach(ev => document.addEventListener(ev, first, { capture: true, passive: true }));
+}
 
 /* ---------- เลื่อนแล้วค่อย ๆ โผล่ ---------- */
 const io = new IntersectionObserver(es => {
@@ -327,16 +418,25 @@ lb.addEventListener('touchend', e => {
   if (Math.abs(dx) > 40) showPhoto(li + (dx < 0 ? 1 : -1));
 });
 
-/* ---------- ส่งข้อมูลไป Google Apps Script ---------- */
-async function api(payload) {
-  if (!C.apiUrl) throw new Error('NO_API');
-  // ไม่ใส่ Content-Type เอง → เป็น text/plain จึงไม่ติด CORS preflight ของ Apps Script
-  const res = await fetch(C.apiUrl, { method: 'POST', body: JSON.stringify(payload), redirect: 'follow' });
-  const out = await res.json();
-  if (!out.ok) throw new Error(out.error || 'ส่งไม่สำเร็จ');
+/* ---------- ส่งข้อมูลเข้าเซิร์ฟเวอร์ ---------- */
+async function api(path, body) {
+  const res = await fetch('/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let out = null; try { out = await res.json(); } catch (e) { /* ไม่ใช่ JSON */ }
+  if (!res.ok || !out || !out.ok) { const err = new Error((out && out.error) || 'HTTP ' + res.status); err.shown = !!(out && out.error); throw err; }
   return out;
 }
-const failMsg = e => e.message === 'NO_API' ? 'ยังไม่ได้เชื่อมต่อระบบรับข้อมูล (CONFIG.apiUrl)' : 'ส่งไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่';
+
+/* ปุ่มบวก/ลบ จำนวนคน */
+const cnt = $('#r-count'), CMIN = 1, CMAX = 20;
+function setCount(v) {
+  v = Math.min(CMAX, Math.max(CMIN, parseInt(v, 10) || CMIN));
+  cnt.value = v; $('#cMinus').disabled = v <= CMIN; $('#cPlus').disabled = v >= CMAX;
+}
+$('#cMinus').addEventListener('click', () => setCount(+cnt.value - 1));
+$('#cPlus').addEventListener('click', () => setCount(+cnt.value + 1));
+cnt.addEventListener('change', () => setCount(cnt.value));
+setCount(1);
 
 /* ตอบรับเข้าร่วมงาน */
 let rsvpBusy = false;
@@ -348,83 +448,204 @@ $('#rsvpForm').addEventListener('submit', async e => {
   if (!(count >= 1 && count <= 20)) { toast('กรุณากรอกจำนวนคน'); f.count.focus(); return; }
   rsvpBusy = true; toast('กำลังส่งข้อมูล…', 15000);
   try {
-    await api({ action: 'rsvp', name, count });
+    await api('rsvp', { name, count });
     $('#rsvpDone').classList.add('on'); toast('ส่งข้อมูลเรียบร้อย');
   } catch (err) { console.error(err); toast(failMsg(err), 4500); }
   rsvpBusy = false;
 });
 
-/* คำอวยพร: รูป + วิดีโอ */
-let photoFile = null, videoFile = null;
-$('#pickPhoto').addEventListener('click', () => $('#photoInput').click());
-$('#pickVideo').addEventListener('click', () => $('#videoInput').click());
-$('#photoInput').addEventListener('change', e => {
-  photoFile = e.target.files[0] || null;
-  $('#photoBadge').classList.toggle('on', !!photoFile);
-  if (photoFile) toast('แนบรูปแล้ว');
-});
-$('#videoInput').addEventListener('change', e => {
-  const f = e.target.files[0] || null;
-  if (f && f.size > C.maxVideoMB * 1048576) { toast(`วิดีโอใหญ่เกิน ${C.maxVideoMB}MB กรุณาอัดให้สั้นลง`, 4500); e.target.value = ''; return; }
-  videoFile = f;
-  $('#videoBadge').classList.toggle('on', !!videoFile);
-  if (videoFile) toast('แนบวิดีโอแล้ว');
-});
+/* ---------- อัปโหลดไฟล์: ส่งตรงเข้าเซิร์ฟเวอร์เป็นชิ้น ครั้งละ 3 ชิ้นพร้อมกัน ----------
+   เริ่มอัปโหลดทันทีที่แนบ ระหว่างที่แขกยังพิมพ์คำอวยพรอยู่ พอกดส่งจึงแทบไม่ต้องรอ   */
+function startUpload(blob, kind, ext, onProgress) {
+  const ctl = new AbortController();
+  const promise = (async () => {
+    const { id, chunk } = await api('upload/start', { kind, ext, size: blob.size });
+    const offs = []; for (let o = 0; o < blob.size; o += chunk) offs.push(o);
+    let next = 0, sent = 0;
+    const worker = async () => {
+      while (next < offs.length) {
+        const o = offs[next++], part = blob.slice(o, o + chunk);
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const r = await fetch(`/api/upload/${id}?offset=${o}`, { method: 'PUT', body: part, signal: ctl.signal, headers: { 'Content-Type': 'application/octet-stream' } });
+            if (!r.ok) throw new Error('chunk ' + r.status);
+            break;
+          } catch (err) {
+            if (ctl.signal.aborted || attempt >= 3) throw err;
+            await new Promise(ok => setTimeout(ok, 900 * (attempt + 1)));
+          }
+        }
+        sent += part.size; onProgress(sent / blob.size);
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    return id;
+  })();
+  promise.catch(() => {});
+  return { promise, abort: () => ctl.abort() };
+}
 
-const b64 = blob => new Promise((ok, no) => {
-  const r = new FileReader(); r.onload = () => ok(r.result.slice(r.result.indexOf(',') + 1)); r.onerror = no; r.readAsDataURL(blob);
-});
-// ย่อรูปก่อนส่ง (ด้านยาวไม่เกิน 1800px)
+const att = { photo: null, video: null };          // { blob, ext, up, pct, state: 'busy' | 'done' | 'err' }
+const badgeOf = kind => $(kind === 'photo' ? '#photoBadge' : '#videoBadge');
+let onAttProgress = null;
+function paintBadge(kind) {
+  const a = att[kind], b = badgeOf(kind);
+  b.className = 'badge' + (a ? ' on' + (a.state === 'busy' ? ' busy' : a.state === 'err' ? ' err' : '') : '');
+  b.textContent = !a ? '' : a.state === 'busy' ? Math.round(a.pct * 100) + '%' : a.state === 'err' ? '!' : '✓';
+}
+function beginUpload(kind) {
+  const a = att[kind]; if (!a) return;
+  a.state = 'busy'; a.pct = 0; paintBadge(kind);
+  a.up = startUpload(a.blob, kind, a.ext, p => { if (att[kind] !== a) return; a.pct = p; paintBadge(kind); if (onAttProgress) onAttProgress(); });
+  a.up.promise.then(() => { if (att[kind] === a) { a.state = 'done'; paintBadge(kind); } },
+    err => { if (att[kind] !== a) return; console.error(err); a.state = 'err'; paintBadge(kind); if (err && err.shown) toast(err.message, 4500); });
+}
+function setAttachment(kind, blob, ext) {
+  if (att[kind] && att[kind].up) att[kind].up.abort();
+  att[kind] = blob ? { blob, ext, up: null, pct: 0, state: 'busy' } : null;
+  paintBadge(kind);
+  if (blob) beginUpload(kind);
+}
+const extOf = (file, fallback) => { const m = /\.([a-z0-9]{2,5})$/i.exec(file.name || ''); return (m ? m[1] : fallback).toLowerCase(); };
+
+/* รูป: ย่อก่อนส่ง (ด้านยาวไม่เกิน 2000px) */
 async function shrink(file) {
   try {
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+    const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
     const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
     cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .86));
-    if (blob) return { blob, type: 'image/jpeg', ext: 'jpg' };
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', .88));
+    if (blob) return { blob, ext: 'jpg' };
   } catch (e) { /* ย่อไม่ได้ก็ส่งไฟล์เดิม */ }
-  return { blob: file, type: file.type || 'image/jpeg', ext: (file.name.split('.').pop() || 'jpg') };
+  return { blob: file, ext: extOf(file, 'jpg') };
 }
-// วิดีโอส่งเป็นชิ้น ชิ้นละ 4MB
-async function uploadVideo(file, who, onProgress) {
-  const CH = 4 * 1024 * 1024;
-  const type = file.type || 'video/mp4', ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
-  const { uploadUrl } = await api({ action: 'videoStart', who, type, ext, size: file.size });
-  let fileId = null;
-  for (let off = 0; off < file.size; off += CH) {
-    const part = file.slice(off, Math.min(off + CH, file.size));
-    const out = await api({ action: 'videoChunk', uploadUrl, offset: off, total: file.size, type, data: await b64(part) });
-    if (out.fileId) fileId = out.fileId;
-    onProgress(Math.min(1, (off + part.size) / file.size));
-  }
-  if (!fileId) throw new Error('อัปโหลดวิดีโอไม่สมบูรณ์');
-  return fileId;
-}
+$('#pickPhoto').addEventListener('click', () => $('#photoInput').click());
+$('#photoInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const s = await shrink(f);
+  setAttachment('photo', s.blob, s.ext); toast('แนบรูปแล้ว');
+});
 
+/* วิดีโอจากไฟล์ (เลือกจากเครื่อง หรือกล้องมือถือกรณีเบราว์เซอร์ไม่รองรับกล้องในหน้าเว็บ) */
+function useVideoFile(f) {
+  if (!f) return;
+  if (f.size > C.maxVideoMB * 1048576) { toast(`วิดีโอใหญ่เกิน ${C.maxVideoMB}MB กรุณาใช้คลิปที่สั้นลง`, 4500); return; }
+  setAttachment('video', f, extOf(f, 'mp4')); toast('แนบวิดีโอแล้ว');
+}
+for (const id of ['#videoInput', '#videoLib']) $(id).addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; closeCam(); useVideoFile(f); });
+
+/* ---------- กล้องในหน้าเว็บ: Full HD, ไม่กลับด้าน, จำกัดเวลา ---------- */
+const cam = $('#cam'), camView = $('#camView');
+let camStream = null, camRec = null, camChunks = [], camBlob = null, camUrl = null, camTimer = null, camFacing = 'user', camLeft = 0;
+const canRecord = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+const fmt = s => Math.floor(s / 60) + ':' + pad(s % 60);
+function pickMime() {
+  const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  return list.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+function stopStream() { if (camStream) camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+function clearClip() { if (camUrl) URL.revokeObjectURL(camUrl); camUrl = null; camBlob = null; }
+async function startStream() {
+  stopStream(); clearClip();
+  cam.classList.remove('review', 'recording', 'msg');
+  camView.loop = false; camView.removeAttribute('src'); camView.muted = true;
+  $('#camTime').textContent = fmt(C.videoSeconds); $('#camHint').textContent = `ยาวสุด ${C.videoSeconds} วินาที`;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true },
+      video: { facingMode: camFacing, width: { ideal: C.videoWidth }, height: { ideal: C.videoHeight }, frameRate: { ideal: 30 } },
+    });
+    if (!cam.classList.contains('on')) { stopStream(); return; }
+    camView.srcObject = camStream; camView.play().catch(() => {});
+  } catch (err) {
+    console.error(err);
+    $('#camMsg').innerHTML = 'เปิดกล้องไม่ได้<br>กรุณาอนุญาตการใช้กล้องและไมโครโฟน<br>หรือกด “เลือกวิดีโอจากเครื่อง” ด้านล่าง';
+    cam.classList.add('msg');
+  }
+}
+function openCam() {
+  if (!canRecord()) { $('#videoInput').click(); return; }      // เบราว์เซอร์เก่า → ใช้กล้องของมือถือ
+  cam.classList.add('on'); document.body.classList.add('locked');
+  audio.pause();                                                // หยุดเพลงไม่ให้เสียงเข้าไมค์
+  startStream();
+}
+function closeCam() {
+  if (!cam.classList.contains('on')) return;
+  clearInterval(camTimer);
+  if (camRec && camRec.state !== 'inactive') { camRec.onstop = null; camRec.stop(); }
+  camRec = null; stopStream(); clearClip();
+  camView.pause(); camView.srcObject = null; camView.removeAttribute('src'); camView.load();
+  cam.classList.remove('on', 'review', 'recording', 'msg'); document.body.classList.remove('locked');
+}
+function startRec() {
+  if (!camStream) return;
+  const mimeType = pickMime();
+  try { camRec = new MediaRecorder(camStream, { ...(mimeType ? { mimeType } : {}), videoBitsPerSecond: C.videoBitrate, audioBitsPerSecond: 128000 }); }
+  catch (e) { camRec = new MediaRecorder(camStream); }
+  camChunks = [];
+  camRec.ondataavailable = e => { if (e.data && e.data.size) camChunks.push(e.data); };
+  camRec.onstop = () => {
+    clearInterval(camTimer);
+    const type = (camRec.mimeType || mimeType || 'video/mp4').split(';')[0];
+    camBlob = new Blob(camChunks, { type }); camChunks = [];
+    stopStream();
+    cam.classList.remove('recording'); cam.classList.add('review');
+    camUrl = URL.createObjectURL(camBlob);
+    $('#camTime').textContent = 'ดูตัวอย่าง';
+    camView.srcObject = null; camView.src = camUrl; camView.loop = true; camView.muted = false;
+    camView.play().catch(() => { camView.muted = true; camView.play().catch(() => {}); });   // บางเครื่องไม่ให้เล่นเสียงเอง → เล่นแบบเงียบ แตะจอเพื่อเปิดเสียง
+  };
+  camRec.start(1000);
+  cam.classList.add('recording');
+  camLeft = C.videoSeconds; $('#camTime').textContent = fmt(camLeft);
+  camTimer = setInterval(() => { camLeft--; $('#camTime').textContent = fmt(Math.max(0, camLeft)); if (camLeft <= 0) stopRec(); }, 1000);
+}
+function stopRec() { clearInterval(camTimer); if (camRec && camRec.state !== 'inactive') camRec.stop(); }
+camView.addEventListener('click', () => {            // ตอนดูตัวอย่าง: แตะเพื่อเปิดเสียง / หยุด / เล่นต่อ
+  if (!cam.classList.contains('review')) return;
+  if (camView.muted) { camView.muted = false; camView.play().catch(() => {}); }
+  else if (camView.paused) camView.play().catch(() => {}); else camView.pause();
+});
+$('#pickVideo').addEventListener('click', openCam);
+$('#camClose').addEventListener('click', closeCam);
+$('#camRec').addEventListener('click', () => (camRec && camRec.state === 'recording') ? stopRec() : startRec());
+$('#camFlip').addEventListener('click', () => { camFacing = camFacing === 'user' ? 'environment' : 'user'; startStream(); });
+$('#camLib').addEventListener('click', () => $('#videoLib').click());
+$('#camRetake').addEventListener('click', startStream);
+$('#camUse').addEventListener('click', () => {
+  const blob = camBlob; if (!blob) return;
+  const ext = blob.type.includes('webm') ? 'webm' : 'mp4';
+  camBlob = null; closeCam();
+  setAttachment('video', blob, ext); toast('แนบวิดีโอแล้ว');
+});
+
+/* ---------- ส่งคำอวยพร ---------- */
 let wishBusy = false;
 $('#wishForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (wishBusy) return;
   const f = e.target, name = f.name.value.trim(), message = f.message.value.trim();
   if (!name) { toast('กรุณาระบุชื่อเจ้าของคำอวยพร'); f.name.focus(); return; }
-  if (!message && !photoFile && !videoFile) { toast('เขียนคำอวยพร หรือแนบรูป/วิดีโอก่อนนะคะ'); f.message.focus(); return; }
-  if (!C.apiUrl) { toast(failMsg(new Error('NO_API')), 4500); return; }
+  if (!message && !att.photo && !att.video) { toast('เขียนคำอวยพร หรือแนบรูป/วิดีโอก่อนนะคะ'); f.message.focus(); return; }
   wishBusy = true;
-  const pct = p => { $('#sendPct').textContent = Math.round(p * 100) + '%'; };
-  pct(0); $('#sending').classList.add('on');
+  const paint = () => {
+    const list = [att.photo, att.video].filter(Boolean);
+    const total = list.reduce((n, a) => n + a.blob.size, 0) || 1;
+    const p = list.reduce((n, a) => n + a.blob.size * (a.state === 'done' ? 1 : a.pct), 0) / total;
+    $('#sendPct').textContent = Math.round((list.length ? p : 1) * 100) + '%';
+  };
+  onAttProgress = paint; paint(); $('#sending').classList.add('on');
   try {
-    let videoId = null, photo = null;
-    if (videoFile) videoId = await uploadVideo(videoFile, name, p => pct(p * .9));
-    pct(.92);
-    if (photoFile) { const s = await shrink(photoFile); photo = { type: s.type, ext: s.ext, data: await b64(s.blob) }; }
-    await api({ action: 'wish', name, message, photo, videoId });
-    pct(1);
-    f.reset(); photoFile = videoFile = null; $('#photoInput').value = ''; $('#videoInput').value = '';
-    $('#photoBadge').classList.remove('on'); $('#videoBadge').classList.remove('on');
+    for (const kind of ['photo', 'video']) if (att[kind] && att[kind].state === 'err') beginUpload(kind);   // ลองใหม่ถ้ารอบแรกพลาด
+    const photoId = att.photo ? await att.photo.up.promise : null;
+    const videoId = att.video ? await att.video.up.promise : null;
+    await api('wish', { name, message, photoId, videoId });
+    f.reset(); att.photo = att.video = null; paintBadge('photo'); paintBadge('video');
     $('#wishThanks').classList.add('on');
   } catch (err) { console.error(err); toast(failMsg(err), 4500); }
-  $('#sending').classList.remove('on');
+  onAttProgress = null; $('#sending').classList.remove('on');
   wishBusy = false;
 });
 $('#wishAgain').addEventListener('click', () => $('#wishThanks').classList.remove('on'));

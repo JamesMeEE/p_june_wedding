@@ -1,0 +1,17 @@
+{
+  "name": "june-non-wedding",
+  "private": true,
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "compression": "^1.8.2",
+    "express": "^4.22.3"
+  }
+}

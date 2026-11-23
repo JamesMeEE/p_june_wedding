@@ -1,5 +1,9 @@
-FROM caddy:2-alpine
-COPY index.html /srv/index.html
-COPY assets /srv/assets
-COPY music /srv/music
-CMD caddy file-server --root /srv --listen :${PORT:-8080}
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production DATA_DIR=/data
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY server.js index.html ./
+COPY assets ./assets
+COPY music ./music
+CMD ["node", "server.js"]
