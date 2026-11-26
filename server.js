@@ -76,6 +76,11 @@ setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.so
 /* ---------- หน้าเว็บ ---------- */
 const staticOpts = { maxAge: '7d', index: false, dotfiles: 'deny' };
 app.get(['/', '/index.html'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(ROOT, 'index.html')); });
+// ลิงก์แยก: เปิดมาแล้วเริ่มที่หน้าเขียนคำอวยพรเลย (หน้าเว็บเดียวกัน index.html เลื่อนลงไปเอง)
+app.get('/wishes', (req, res) => {
+  if (req.path !== '/wishes') return res.redirect('/wishes');      // ตัด / ท้ายลิงก์ ไม่งั้นหารูปไม่เจอ
+  res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(ROOT, 'index.html'));
+});
 app.use('/assets', express.static(path.join(ROOT, 'assets'), staticOpts));
 app.use('/music', express.static(path.join(ROOT, 'music'), staticOpts));
 app.get('/healthz', (req, res) => res.json({ ok: true }));

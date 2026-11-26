@@ -282,7 +282,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
   </section>
 
   <!-- ================= หน้า 5 : คำอวยพร ================= -->
-  <section class="page p-wishes">
+  <section class="page p-wishes" id="wishes">
     <img class="bg" src="assets/bg-wishes.webp" alt="Leave your wishes for us — From Now Until Forever..." width="1000" height="1386" loading="lazy">
     <form id="wishForm" novalidate>
       <input class="a h wish-field" style="--x:124;--y:585;--w:1038;--h:128" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
@@ -381,6 +381,17 @@ const safe = (name, fn) => { try { fn(); } catch (err) { console.error('[' + nam
 
 $('#mapBtn').href = C.mapUrl;
 $('#lineBtn').href = C.lineUrl;
+
+/* ---------- ลิงก์แยก /wishes (หรือ #wishes): เปิดมาแล้วเริ่มที่หน้าเขียนคำอวยพรเลย ---------- */
+safe('jump', () => {
+  if (!/^\/wishes\/?$/.test(location.pathname) && location.hash !== '#wishes') return;
+  try { history.scrollRestoration = 'manual'; } catch (e) { /* เบราว์เซอร์เก่า */ }
+  const sec = $('#wishes'); let touched = false;
+  const go = () => { if (!touched) window.scrollTo(0, Math.round(sec.getBoundingClientRect().top + window.pageYOffset)); };
+  ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(ev => addEventListener(ev, () => { touched = true; }, { passive: true, once: true }));
+  go(); addEventListener('load', go);      // เลื่อนซ้ำหลังรูปโหลดครบ เผื่อความสูงหน้าเปลี่ยน (ถ้าแขกเริ่มเลื่อนเองแล้วจะไม่ไปยุ่ง)
+  [300, 1000].forEach(ms => setTimeout(go, ms));
+});
 
 /* ---------- toast ---------- */
 let tt;
