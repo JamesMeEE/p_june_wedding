@@ -362,7 +362,6 @@ window.CONFIG = {
   photos: ['assets/full1.webp', 'assets/full2.webp', 'assets/full3.webp', 'assets/full4.webp'],
   endingFrames: 8,                                 // ภาพท้ายเว็บ: assets/ending1.webp … ending8.webp เล่นต่อกันตามลำดับ
   endingFrameMs: 700,                              // เวลาต่อภาพ (มิลลิวินาที) · เลขมาก = ช้าลง
-  endingHoldMs: 1500,                              // ค้างภาพสุดท้าย (Thank You) นานเท่านี้ก่อนวนกลับไปภาพแรก
   // วิดีโออวยพร: Full HD ยาวสุด 60 วินาที
   videoSeconds: 60,
   videoWidth: 1920, videoHeight: 1080,
@@ -508,7 +507,7 @@ lb.addEventListener('touchend', e => {
 });
 });
 
-/* ---------- ภาพท้ายเว็บ: เล่นต่อกันทีละภาพ วนไปเรื่อย ๆ (เล่นเฉพาะตอนอยู่ในจอ) ---------- */
+/* ---------- ภาพท้ายเว็บ: เล่นต่อกันทีละภาพเมื่อเลื่อนมาถึง แล้วค้างที่ภาพสุดท้าย (ไม่วน) ---------- */
 safe('ending', () => {
   const box = $('#ending'), frames = [box.querySelector('img')];
   let timer = null, at = 0;
@@ -521,12 +520,13 @@ safe('ending', () => {
   const ready = f => f.complete && f.naturalWidth > 0;
   function show(i) { at = i; frames.forEach((f, k) => { if (k) f.classList.toggle('on', k === i); }); }      // ภาพแรกเป็นฐานอยู่ข้างล่างเสมอ
   function step() {
-    const last = at >= frames.length - 1, next = last ? 0 : at + 1;
+    const next = at + 1;
+    if (next >= frames.length) { timer = null; return; }      // ถึงภาพสุดท้าย (Thank You) แล้วค้างไว้ ไม่วน
     if (!ready(frames[next])) { timer = setTimeout(step, 200); return; }      // ยังโหลดไม่เสร็จ รอก่อน
     show(next);
-    timer = setTimeout(step, next === frames.length - 1 ? C.endingHoldMs : C.endingFrameMs);
+    timer = setTimeout(step, C.endingFrameMs);
   }
-  function play() { if (timer) return; load(); timer = setTimeout(step, C.endingFrameMs); }
+  function play() { if (timer || at) return; load(); timer = setTimeout(step, C.endingFrameMs); }
   function stop() { clearTimeout(timer); timer = null; }
   try {
     new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) load(); }, { rootMargin: '900px 0px' }).observe(box);
