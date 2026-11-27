@@ -212,7 +212,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 /* ช่องเลือกไฟล์: ซ่อนจากสายตาแต่ไม่ใช้ display:none (เบราว์เซอร์ในแอปบางตัวไม่ยอมเปิดตัวเลือกไฟล์ถ้าซ่อนแบบนั้น) */
 .file-in{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 
-/* ---------- Intro ตอนเปิดเว็บ: ภาพนิ่ง (Intro/8 ตัดลูกไม้ออก) ค้างไว้ครู่หนึ่ง แล้วค่อย ๆ เลือนหายไป (สคริปต์อยู่ใต้ <body>) ---------- */
+/* ---------- Intro ตอนเปิดเว็บ: ภาพนิ่ง (Intro/8 ทั้งภาพ) ค้างไว้ครู่หนึ่ง แล้วค่อย ๆ เลือนหายไป (สคริปต์อยู่ใต้ <body>) ---------- */
 .intro{position:fixed;inset:0;z-index:120;background:#000;touch-action:none;cursor:pointer;transition:opacity 1.4s var(--ease-soft);
   animation:introFailsafe 0s 12s forwards}      /* กันพลาด: ถ้าสคริปต์ไม่ทำงาน ฉากนี้หายเองหลัง 12 วินาที */
 @keyframes introFailsafe{to{visibility:hidden}}
@@ -228,7 +228,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 
 <!-- ================= Intro: ภาพนิ่งค้างไว้ แล้วค่อย ๆ เลือนหายไป เผยหน้าเว็บ ================= -->
 <div class="intro" id="intro" aria-hidden="true">
-  <img src="assets/intro.webp" alt="" width="1100" height="1138" fetchpriority="high">
+  <img src="assets/intro.webp?v=2" alt="" width="1100" height="1596" fetchpriority="high">
 </div>
 <script>
 /* ---------- Intro ----------
