@@ -334,12 +334,16 @@ window.JN_INTRO = new Promise(function (done) {
 
   <!-- ================= หน้า 5 : คำอวยพร ================= -->
   <section class="page p-wishes" id="wishes">
-    <img class="bg" src="assets/bg-wishes.webp?v=2" alt="Leave your wishes for us — From Now Until Forever..." width="946" height="1451" loading="lazy">
+    <img class="bg" src="assets/bg-wishes3.webp" alt="Leave your wishes for us — From Now Until Forever..." width="946" height="1451" loading="lazy">
     <div class="seam" style="--h:341" aria-hidden="true"></div>
     <form id="wishForm" novalidate>
       <input class="a h wish-field" style="--x:95;--y:525;--w:1098;--h:123" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
       <textarea class="a h wish-field" style="--x:95;--y:674;--w:1098;--h:545" name="message" maxlength="2000" placeholder="เขียนคำอวยพรให้พวกเรา (Leave your wishes for us) :)" aria-label="คำอวยพร"></textarea>
 
+      <!-- ไอคอนและปุ่มส่ง: ตัดแยกออกจากรูปพื้นหลัง (bg-wishes3 ลบของเดิมออกแล้ว) จะได้เด้งได้ · ตัวกดจริงคือปุ่มโปร่งใสข้างล่าง -->
+      <img class="a deco bob" style="--x:362.4;--y:1238.6;--w:209.8" src="assets/ic-photo2.webp" alt="" width="154" height="136" loading="lazy">
+      <img class="a deco bob" style="--bd:.4s;--x:752.1;--y:1237.2;--w:208.5" src="assets/ic-video2.webp" alt="" width="153" height="128" loading="lazy">
+      <img class="a deco bob" style="--bd:.8s;--x:372;--y:1441.6;--w:580.5" src="assets/btn-send3.webp" alt="" width="426" height="78" loading="lazy">
       <button type="button" class="a h hot tap" id="pickPhoto" style="--x:55;--y:1233;--w:531;--h:204" aria-label="Add a Photo — แนบรูป"><span class="badge" id="photoBadge">✓</span></button>
       <button type="button" class="a h hot tap" id="pickVideo" style="--x:709;--y:1233;--w:531;--h:204" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
       <input type="file" class="file-in" id="photoInput" accept="image/*" tabindex="-1" aria-hidden="true">
