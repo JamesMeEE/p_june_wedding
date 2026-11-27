@@ -125,7 +125,7 @@ input[type=number].field{-moz-appearance:textfield}
 .done-msg.on{display:grid}
 
 /* ================= หน้า 5 : คำอวยพร ================= */
-.p-wishes{--dw:1289;margin-top:calc((-24 + var(--sy, 0)) * var(--u))}      /* --sy = ระยะที่เลื่อนขอบลูกไม้จากหน้า /edit (ทั้งหน้านี้และทุกอย่างด้านล่างเลื่อนตาม) */
+.p-wishes{--dw:1289;margin-top:calc((-24 + var(--sy, 0)) * var(--u));z-index:2}      /* z-index: ขอบกระดาษฉีกด้านล่างทับภาพท้ายเว็บ */      /* --sy = ระยะที่เลื่อนขอบลูกไม้จากหน้า /edit (ทั้งหน้านี้และทุกอย่างด้านล่างเลื่อนตาม) */
 /* พื้นที่แตะเลือก "ขอบลูกไม้" ในหน้า /edit (มองไม่เห็น และแขกแตะไม่โดน) */
 .seam{position:absolute;left:0;top:0;width:100%;height:calc(var(--h) * var(--u));pointer-events:none}
 .wish-field{
@@ -153,7 +153,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .thanks button{margin-top:16px;padding:10px 22px;border-radius:999px;border:1px solid #fff;color:#fff;font-size:14px}
 
 /* ================= ท้ายสุด : Thank you (ภาพต่อเนื่อง 8 เฟรม) ================= */
-.p-ending{--dw:946;margin-top:calc(-40 * var(--u))}      /* ขอบกระดาษฉีกด้านบนเลื่อนขึ้นไปทับขอบล่างของหน้าคำอวยพร */
+.p-ending{--dw:946;margin-top:calc(-191 * var(--u))}      /* สอดเข้าใต้ขอบกระดาษฉีกของหน้าคำอวยพร (ขอบบนของภาพนี้จึงถูกบังมิด) */
 .p-ending img{width:100%;height:auto}
 .p-ending .fr{position:absolute;left:0;top:0;visibility:hidden}      /* สลับภาพทันที ไม่เลือน */
 .p-ending .fr.on{visibility:visible}
@@ -352,22 +352,19 @@ window.JN_INTRO = new Promise(function (done) {
 
   <!-- ================= หน้า 5 : คำอวยพร ================= -->
   <section class="page p-wishes" id="wishes">
-    <img class="bg" src="assets/bg-wishes.webp" alt="Leave your wishes for us — From Now Until Forever..." width="1000" height="1386" loading="lazy">
-    <div class="seam" style="--h:335" aria-hidden="true"></div>
+    <img class="bg" src="assets/bg-wishes.webp?v=2" alt="Leave your wishes for us — From Now Until Forever..." width="946" height="1451" loading="lazy">
+    <div class="seam" style="--h:341" aria-hidden="true"></div>
     <form id="wishForm" novalidate>
-      <input class="a h wish-field" style="--x:124;--y:585;--w:1038;--h:128" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
-      <textarea class="a h wish-field" style="--x:124;--y:752;--w:1038;--h:464" name="message" maxlength="2000" placeholder="เขียนคำอวยพรให้พวกเรา (Leave your wishes for us) :)" aria-label="คำอวยพร"></textarea>
+      <input class="a h wish-field" style="--x:95;--y:525;--w:1098;--h:123" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
+      <textarea class="a h wish-field" style="--x:95;--y:674;--w:1098;--h:545" name="message" maxlength="2000" placeholder="เขียนคำอวยพรให้พวกเรา (Leave your wishes for us) :)" aria-label="คำอวยพร"></textarea>
 
-      <img class="a deco bob" style="--x:349;--y:1254;--w:206" src="assets/ic-photo.webp" alt="" width="200" height="175" loading="lazy">
-      <img class="a deco bob" style="--bd:.4s;--x:742;--y:1255;--w:184" src="assets/ic-video.webp" alt="" width="200" height="162" loading="lazy">
-      <img class="a deco bob" style="--bd:.8s;--x:343;--y:1460;--w:608" src="assets/btn-send.webp" alt="" width="480" height="93" loading="lazy">
-      <button type="button" class="a h hot tap" id="pickPhoto" style="--x:70;--y:1240;--w:495;--h:205" aria-label="Add a Photo — แนบรูป"><span class="badge" id="photoBadge">✓</span></button>
-      <button type="button" class="a h hot tap" id="pickVideo" style="--x:730;--y:1240;--w:495;--h:205" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
+      <button type="button" class="a h hot tap" id="pickPhoto" style="--x:55;--y:1233;--w:531;--h:204" aria-label="Add a Photo — แนบรูป"><span class="badge" id="photoBadge">✓</span></button>
+      <button type="button" class="a h hot tap" id="pickVideo" style="--x:709;--y:1233;--w:531;--h:204" aria-label="Record Your Wishes — อัดวิดีโออวยพร"><span class="badge" id="videoBadge">✓</span></button>
       <input type="file" class="file-in" id="photoInput" accept="image/*" tabindex="-1" aria-hidden="true">
       <input type="file" class="file-in" id="videoInput" accept="video/*" capture="user" tabindex="-1" aria-hidden="true">
       <input type="file" class="file-in" id="videoLib" accept="video/*" tabindex="-1" aria-hidden="true">
 
-      <button type="submit" class="a h hot tap" style="--x:342;--y:1462;--w:608;--h:115" aria-label="Send your wishes — ส่งคำอวยพร"></button>
+      <button type="submit" class="a h hot tap" style="--x:371;--y:1442;--w:580;--h:104" aria-label="Send your wishes — ส่งคำอวยพร"></button>
     </form>
     <div class="sending" id="sending" role="status"><div><b id="sendPct">0%</b>กำลังส่งคำอวยพร…<br>กรุณาอย่าปิดหน้านี้</div></div>
     <div class="thanks" id="wishThanks" role="status"><div><h3>Thank you</h3>ได้รับคำอวยพรแล้ว ขอบคุณมากนะคะ<br><button type="button" id="wishAgain">ส่งอีกครั้ง</button></div></div>

@@ -114,11 +114,12 @@ async function sendPage(res, cache) {
   const html = (await fsp.readFile(path.join(ROOT, 'index.html'), 'utf8')).replace('/*LAYOUT*/{}', () => data);
   res.set('Cache-Control', cache).type('html').send(html);
 }
-app.get(['/', '/index.html'], wrap((req, res) => sendPage(res, 'no-cache')));
+// no-store: ไม่ให้เบราว์เซอร์ (รวมถึงเบราว์เซอร์ใน LINE) เก็บหน้าเว็บไว้ใช้ซ้ำ เปิดใหม่เมื่อไรก็ได้เวอร์ชันล่าสุด
+app.get(['/', '/index.html'], wrap((req, res) => sendPage(res, 'no-store')));
 // ลิงก์แยก: เปิดมาแล้วเริ่มที่หน้าเขียนคำอวยพรเลย (หน้าเว็บเดียวกัน index.html เลื่อนลงไปเอง)
 app.get('/wishes', wrap((req, res) => {
   if (req.path !== '/wishes') return res.redirect('/wishes');      // ตัด / ท้ายลิงก์ ไม่งั้นหารูปไม่เจอ
-  return sendPage(res, 'no-cache');
+  return sendPage(res, 'no-store');
 }));
 // หน้าแก้ตำแหน่ง: หน้าเว็บเดียวกัน + โหลด edit.js (ต้องใส่รหัสก่อนถึงจะแก้/บันทึกได้)
 app.get('/edit', wrap((req, res) => {
