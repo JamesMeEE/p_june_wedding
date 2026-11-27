@@ -124,7 +124,9 @@ input[type=number].field{-moz-appearance:textfield}
 .done-msg.on{display:grid}
 
 /* ================= หน้า 5 : คำอวยพร ================= */
-.p-wishes{--dw:1289;margin-top:calc(-24 * var(--u))}
+.p-wishes{--dw:1289;margin-top:calc((-24 + var(--sy, 0)) * var(--u))}      /* --sy = ระยะที่เลื่อนขอบลูกไม้จากหน้า /edit (ทั้งหน้านี้และทุกอย่างด้านล่างเลื่อนตาม) */
+/* พื้นที่แตะเลือก "ขอบลูกไม้" ในหน้า /edit (มองไม่เห็น และแขกแตะไม่โดน) */
+.seam{position:absolute;left:0;top:0;width:100%;height:calc(var(--h) * var(--u));pointer-events:none}
 .wish-field{
   border:0;outline:0;resize:none;border-radius:calc(22 * var(--u));background:rgba(255,255,255,.42);
   font-family:var(--thai);font-size:16px;line-height:1.5;color:#2b2622;padding:calc(34 * var(--u)) calc(48 * var(--u));
@@ -286,6 +288,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
   <!-- ================= หน้า 5 : คำอวยพร ================= -->
   <section class="page p-wishes" id="wishes">
     <img class="bg" src="assets/bg-wishes.webp" alt="Leave your wishes for us — From Now Until Forever..." width="1000" height="1386" loading="lazy">
+    <div class="seam" style="--h:335" aria-hidden="true"></div>
     <form id="wishForm" novalidate>
       <input class="a h wish-field" style="--x:124;--y:585;--w:1038;--h:128" name="name" maxlength="120" placeholder="ระบุชื่อเจ้าของคำอวยพร (Say your name)" aria-label="ชื่อเจ้าของคำอวยพร" required>
       <textarea class="a h wish-field" style="--x:124;--y:752;--w:1038;--h:464" name="message" maxlength="2000" placeholder="เขียนคำอวยพรให้พวกเรา (Leave your wishes for us) :)" aria-label="คำอวยพร"></textarea>
@@ -319,12 +322,14 @@ input.wish-field{padding-top:0;padding-bottom:0}
      'a' = ชิ้น .a (รูป/ปุ่ม/ช่องกรอก) แก้ที่ --x --y --w (--h) และ rotate โดยตรง
      't' = ตัวหนังสือที่วางด้วยวิธีอื่น (ตัวเลขนับถอยหลัง, ชื่อเพลงบนแผ่นเสียง) ขยับด้วย transform
            x, y = ระยะเลื่อน (หน่วยพิกเซลของแบบ) · w = ขนาดเป็น % · r = องศา
+     's' = ขอบลูกไม้ที่เป็นรอยต่อระหว่างหน้า (.seam) เลื่อนได้แค่ขึ้น-ลง (y) โดยเลื่อนทั้งหน้านั้นและทุกอย่างด้านล่างตามไปด้วย
    key = ชื่อหน้า + id/ชื่อรูป (ซ้ำกันจะต่อท้าย #2, #3) */
 window.JN_LAYOUT = /*LAYOUT*/{};
 window.JNLayout = (function () {
   const items = [], byKey = {};
   function apply(it, rec) {
     const v = Object.assign({}, it.base, rec || {}), s = it.el.style;
+    if (it.mode === 's') { it.el.parentNode.style.setProperty('--sy', v.y); return; }
     if (it.mode === 't') {
       s.transform = rec ? `translate(calc(${v.x} * var(--u)), calc(${v.y} * var(--u))) rotate(${v.r}deg) scale(${v.w / 100})` : '';
       return;
@@ -355,6 +360,7 @@ window.JNLayout = (function () {
         add(el, 'a', base, im);
       });
       each(sec.querySelectorAll('.cd > span, .np'), el => add(el, 't', { x: 0, y: 0, w: 100, r: 0 }, null));
+      each(sec.querySelectorAll('.seam'), el => add(el, 's', { x: 0, y: 0, w: 100, r: 0 }, null));
     });
   } catch (err) { console.error('[layout]', err); }
   return { items, byKey, apply };

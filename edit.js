@@ -2,6 +2,7 @@
    หน้า /edit : แก้ตำแหน่งชิ้นงานบนการ์ด
    แตะชิ้นงานเพื่อเลือก (แตะซ้ำที่เดิม = เลือกชิ้นที่ซ้อนอยู่ข้างใต้)
    แล้วกดปุ่ม เลื่อน / หมุน / ขยาย-ย่อ · กด "บันทึก" แล้วแขกทุกคนเห็นตำแหน่งใหม่
+   ขอบลูกไม้บนหน้า 5: เลื่อนได้แค่ขึ้น-ลง และจะพาทั้งหน้า 5 กับทุกอย่างด้านล่างเลื่อนตามไปด้วย
    คีย์บอร์ด: ลูกศร = เลื่อน · Q/E = หมุน · + / - = ขนาด · Ctrl+Z = ย้อน · Ctrl+S = บันทึก · Esc = เลิกเลือก
    ============================================================ */
 (function () {
@@ -140,6 +141,7 @@ function start() {
     'btn-send': 'ภาพปุ่มส่งคำอวยพร', pickPhoto: 'พื้นที่กดแนบรูป', pickVideo: 'พื้นที่กดอัดวิดีโอ', hot: 'พื้นที่กดส่งคำอวยพร',
     'cd-d': 'ตัวเลขนับถอยหลัง: วัน', 'cd-h': 'ตัวเลขนับถอยหลัง: ชั่วโมง', 'cd-m': 'ตัวเลขนับถอยหลัง: นาที', 'cd-s': 'ตัวเลขนับถอยหลัง: วินาที',
     colon: 'เครื่องหมาย : (นับถอยหลัง)', nowPlaying: 'ชื่อเพลงบนแผ่นเสียง',
+    seam: 'ขอบลูกไม้ (เลื่อนทั้งหน้านี้ + ทุกอย่างด้านล่าง)',
   };
   L.items.forEach(it => { const b = it.key.split('/')[1].replace(/#\d+$/, ''); if (LABELS[b]) it.name = LABELS[b]; });
 
@@ -207,7 +209,9 @@ function start() {
     }
     const v = cur(sel);
     $('.ed-name', bar).textContent = (recs[sel.key] ? '● ' : '') + sel.name;
-    $('.ed-val', bar).textContent = sel.mode === 't'
+    $('.ed-val', bar).textContent = sel.mode === 's'
+      ? `เลื่อนขึ้น-ลง y ${r2(v.y)} · ใช้ได้แค่ปุ่ม ↑ ↓`
+      : sel.mode === 't'
       ? `เลื่อน x ${r2(v.x)} · y ${r2(v.y)} · ขนาด ${r2(v.w)}% · หมุน ${r2(v.r)}°`
       : `x ${r2(v.x)} · y ${r2(v.y)} · กว้าง ${r2(v.w)} · หมุน ${r2(v.r)}°`;
   }
@@ -243,6 +247,7 @@ function start() {
   function act(a, first) {
     if (!sel) { if (first) toast('แตะเลือกชิ้นงานก่อน'); return; }
     const v = cur(sel), S = STEPS[step];
+    if (sel.mode === 's' && a !== 'up' && a !== 'down') { if (first) toast('ขอบลูกไม้เลื่อนได้แค่ขึ้น-ลง'); return; }
     if (first) undo.push(snap(sel));
     if (a === 'up') v.y -= S.m; else if (a === 'down') v.y += S.m;
     else if (a === 'left') v.x -= S.m; else if (a === 'right') v.x += S.m;
