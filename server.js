@@ -287,7 +287,14 @@ app.get('/admin/all.zip', admin, wrap(async (req, res) => {
   zip.finalize();
 }));
 
-app.use((req, res) => res.status(404).type('text').send('Not found'));
+app.use((req, res) => {
+  // บันทึกไว้ดูใน log ของ Railway: ช่วยหาสาเหตุเวลาเบราว์เซอร์ในแอป (เช่น LINE) ส่งไม่ถึง
+  if (req.path.startsWith('/api/')) {
+    console.warn('404', req.method, req.get('host'), req.originalUrl, '|', (req.get('user-agent') || '').slice(0, 160));
+    return fail(res, 404, `ส่งไม่สำเร็จ (ไม่พบ ${req.method} ${req.path})`);
+  }
+  res.status(404).type('text').send('Not found');
+});
 app.use((err, req, res, next) => { console.error(err); if (!res.headersSent) fail(res, err.status || 500, 'เกิดข้อผิดพลาด กรุณาลองใหม่'); });
 
 process.on('unhandledRejection', err => console.error('unhandledRejection', err));

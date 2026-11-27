@@ -159,7 +159,8 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .lightbox{position:fixed;inset:0;z-index:80;background:rgba(18,15,10,.9);display:flex;align-items:center;justify-content:center;
   opacity:0;visibility:hidden;transition:opacity .35s var(--ease-soft), visibility 0s .35s}
 .lightbox.on{opacity:1;visibility:visible;transition:opacity .35s var(--ease-soft), visibility 0s}
-.lightbox figure{background:#f4f1e8;padding:6px 6px 10px;box-shadow:0 20px 50px rgba(0,0,0,.5);width:min(96vw, 560px, calc((100vh - 110px) * 2 / 3));width:min(96vw, 560px, calc((100dvh - 110px) * 2 / 3));scale:.94;transition:scale .45s var(--ease-out)}
+/* เผื่อที่ด้านบนให้ปุ่มปิด (อยู่นอกกรอบรูป) */
+.lightbox figure{position:relative;margin-top:52px;background:#f4f1e8;padding:6px 6px 10px;box-shadow:0 20px 50px rgba(0,0,0,.5);width:min(94vw, 560px, calc((100vh - 170px) * 2 / 3));width:min(94vw, 560px, calc((100dvh - 170px) * 2 / 3));scale:.94;transition:scale .45s var(--ease-out)}
 .lightbox.on figure{scale:1}
 .lightbox img{width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;background:#d9d9de}
 .lb-nav{display:flex;align-items:center;justify-content:center;gap:22px;padding-top:12px}
@@ -167,7 +168,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .lb-btn svg{width:20px;height:20px;stroke:#f5f0e4;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .lb-btn:active{scale:.92}
 .lb-count{font-family:'Cronde',serif;font-size:17px;letter-spacing:.18em;color:#4a3f35;min-width:64px;text-align:center}
-.lb-close{position:absolute;right:14px;top:14px;width:44px;height:44px;color:#fff;font-size:26px}
+.lb-close{position:absolute;right:-4px;bottom:100%;margin-bottom:6px;width:44px;height:44px;color:#fff;font-size:26px;line-height:44px;text-align:center}
 
 /* ---------- กล้องอัดวิดีโออวยพร ---------- */
 .cam{position:fixed;inset:0;z-index:90;background:#000;display:none;color:#fff}
@@ -369,8 +370,8 @@ window.JNLayout = (function () {
 
 <!-- ดูรูปใหญ่ -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="รูปถ่าย">
-  <button class="lb-close" id="lbClose" aria-label="ปิด">✕</button>
   <figure>
+    <button type="button" class="lb-close" id="lbClose" aria-label="ปิด">✕</button>
     <img id="lbImg" src="" alt="Chenisa & Sranon">
     <div class="lb-nav">
       <button type="button" class="lb-btn" id="lbPrev" aria-label="รูปก่อนหน้า"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -586,7 +587,9 @@ function send(method, url, body, type, timeout, hold) {
     x.onload = () => {
       let out = null; try { out = JSON.parse(x.responseText); } catch (e) { /* ไม่ใช่ JSON */ }
       if (x.status >= 200 && x.status < 300 && out && out.ok) return ok(out);
-      const err = new Error((out && out.error) || 'HTTP ' + x.status); err.shown = !!(out && out.error); err.status = x.status; no(err);
+      // ถ้าคำขอถูกส่งต่อไปที่อื่น (redirect / คนละโดเมน) ให้เห็นปลายทางในข้อความ จะได้รู้ว่าติดที่ไหน
+      let where = ''; try { const u = new URL(x.responseURL || url, location.href); where = (u.host !== location.host ? u.host : '') + u.pathname; } catch (e) { /* - */ }
+      const err = new Error((out && out.error) || 'HTTP ' + x.status + ' ' + where); err.shown = !!(out && out.error); err.status = x.status; no(err);
     };
     x.onerror = () => no(new Error('network'));
     x.ontimeout = () => no(new Error('timeout'));
@@ -597,7 +600,7 @@ function send(method, url, body, type, timeout, hold) {
 }
 const api = (path, body) => send('POST', '/api/' + path, JSON.stringify(body), 'application/json', 30000);
 // ข้อความจากเซิร์ฟเวอร์แสดงตรง ๆ · นอกนั้นแนบสาเหตุสั้น ๆ ไว้ท้ายข้อความ จะได้รู้ว่าติดที่อะไร
-const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' + (e && e.message ? ' (' + String(e.message).slice(0, 40) + ')' : '');
+const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' + (e && e.message ? ' (' + String(e.message).slice(0, 80) + ')' : '');
 
 /* ปุ่มบวก/ลบ จำนวนคน */
 const cnt = $('#r-count'), CMIN = 1, CMAX = 20;
