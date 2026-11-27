@@ -244,6 +244,11 @@ const csv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n')
 const rsvpCsv = async () => csv([['เวลา', 'ชื่อผู้ร่วมงาน & ผู้ติดตาม', 'จำนวนคน'], ...(await readLines(RSVP_FILE)).map(r => [bkk(r.t), r.name, r.count])]);
 const wishCsv = async () => csv([['เวลา', 'ชื่อ', 'คำอวยพร', 'ไฟล์รูป', 'ไฟล์วิดีโอ'], ...(await readLines(WISH_FILE)).map(w => [bkk(w.t), w.name, w.message, w.photo, w.video])]);
 const today = () => stamp().slice(0, 8);
+const ADMIN_MSG = {
+  cleared: '<div class="note ok">ล้างข้อมูลเรียบร้อยแล้ว</div>',
+  none: '<div class="note warn">ยังไม่ได้เลือกว่าจะล้างอะไร</div>',
+  confirm: '<div class="note warn">ยังไม่ได้ล้าง: ต้องพิมพ์คำว่า “ลบ” ให้ถูกก่อน</div>',
+};
 
 app.get('/admin', admin, wrap(async (req, res) => {
   const rsvp = await readLines(RSVP_FILE), wishes = await readLines(WISH_FILE);
@@ -263,8 +268,13 @@ main{max-width:1000px;margin:0 auto;padding:24px 16px 80px}h1{font:400 30px Geor
 th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{font-weight:600;white-space:nowrap;background:#faf8f1}tr:last-child td{border-bottom:0}
 td.t{white-space:nowrap;color:#7a6f63}td.n{text-align:right}td.msg{white-space:pre-wrap;min-width:220px}
 .thumb{width:88px;height:88px;object-fit:cover;border-radius:8px;display:block}.empty{padding:20px;color:#7a6f63}
+.note{padding:12px 16px;border-radius:12px;margin:0 0 16px}.note.ok{background:#e4f2e7;color:#1f5a2c}.note.warn{background:#fbe9e7;color:#8a2318}
+.danger{background:#fff;border:1px solid #e8c4bf;border-radius:12px;padding:16px;display:grid;gap:10px}.danger p{margin:0;color:#6b5f55}
+.danger label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.danger .cf input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;width:110px}
+.danger button{justify-self:start;padding:10px 18px;border-radius:999px;border:0;background:#a3271f;color:#fff;font:inherit;cursor:pointer}
 </style></head><body><main>
 <h1>June &amp; Non — The Wedding</h1><p class="sub">ข้อมูลตอบรับและคำอวยพร</p>
+${Object.hasOwn(ADMIN_MSG, String(req.query.msg)) ? ADMIN_MSG[req.query.msg] : ''}
 <div class="stats"><div class="stat"><b>${rsvp.length}</b>รายการตอบรับ</div><div class="stat"><b>${guests}</b>จำนวนแขกรวม</div><div class="stat"><b>${wishes.length}</b>คำอวยพร</div><div class="stat"><b>${gb} GB</b>พื้นที่ไฟล์ที่ใช้</div></div>
 <div class="btns"><a class="btn" href="/admin/all.zip">ดาวน์โหลดทั้งหมด (.zip)</a><a class="btn ghost" href="/admin/rsvp.csv">รายชื่อตอบรับ (.csv)</a><a class="btn ghost" href="/admin/wishes.csv">คำอวยพร (.csv)</a></div>
 <h2>รายชื่อตอบรับ</h2><div class="wrap">${rsvp.length ? `<table><tr><th>เวลา</th><th>ชื่อผู้ร่วมงาน &amp; ผู้ติดตาม</th><th>จำนวนคน</th></tr>${
@@ -273,7 +283,32 @@ td.t{white-space:nowrap;color:#7a6f63}td.n{text-align:right}td.msg{white-space:p
   wishes.slice().reverse().map(w => `<tr><td class="t">${esc(bkk(w.t))}</td><td>${esc(w.name)}</td><td class="msg">${esc(w.message)}</td><td>${
     w.photo ? `<a href="${f(w.photo)}" target="_blank"><img class="thumb" loading="lazy" src="${f(w.photo)}" alt=""></a>` : ''}</td><td>${
     w.video ? `<a href="${f(w.video)}" target="_blank">เปิดวิดีโอ</a><br><a href="${f(w.video)}?dl=1">ดาวน์โหลด</a>` : ''}</td></tr>`).join('')}</table>` : '<div class="empty">ยังไม่มีข้อมูล</div>'}</div>
+<h2>ล้างข้อมูล</h2>
+<form class="danger" method="post" action="/admin/clear">
+  <p>ใช้ล้างข้อมูลทดสอบก่อนส่งการ์ดจริง · <b>ลบแล้วกู้คืนไม่ได้</b> (แนะนำให้กด “ดาวน์โหลดทั้งหมด” เก็บไว้ก่อน)<br>ตำแหน่งชิ้นงานที่แก้จากหน้า /edit จะไม่ถูกลบ</p>
+  <label><input type="checkbox" name="rsvp" value="1" checked> รายชื่อตอบรับ (${rsvp.length} รายการ)</label>
+  <label><input type="checkbox" name="wishes" value="1" checked> คำอวยพร พร้อมรูปและวิดีโอทั้งหมด (${wishes.length} รายการ, ${gb} GB)</label>
+  <label class="cf">พิมพ์คำว่า <b>ลบ</b> เพื่อยืนยัน <input name="confirm" autocomplete="off" required></label>
+  <button type="submit">ล้างข้อมูลที่เลือก</button>
+</form>
 </main></body></html>`);
+}));
+
+// ล้างข้อมูลทดสอบ: ต้องพิมพ์ "ลบ" และต้องกดจากหน้า /admin ของเว็บนี้เอง (กันเว็บอื่นแอบส่งฟอร์มมาลบ)
+app.post('/admin/clear', admin, express.urlencoded({ extended: false, limit: '4kb' }), wrap(async (req, res) => {
+  const from = req.get('origin') || req.get('referer') || '';
+  let sameSite = false; try { sameSite = new URL(from).host === req.get('host'); } catch { /* ไม่มี/ผิดรูปแบบ */ }
+  if (!sameSite) return res.status(403).type('text').send('ปฏิเสธ: ต้องกดจากหน้า /admin');
+  if (String(req.body.confirm || '').trim() !== 'ลบ') return res.redirect(303, '/admin?msg=confirm');
+  const done = [];
+  if (req.body.rsvp) { await fsp.rm(RSVP_FILE, { force: true }); done.push('rsvp'); }
+  if (req.body.wishes) {
+    await fsp.rm(WISH_FILE, { force: true });
+    for (const name of await fsp.readdir(UP)) await fsp.rm(path.join(UP, name), { force: true, recursive: true });
+    totalBytes = 0; done.push('wishes');
+  }
+  console.log('admin clear', done.join(',') || '(nothing)', req.ip);
+  res.redirect(303, '/admin?msg=' + (done.length ? 'cleared' : 'none'));
 }));
 
 app.get('/admin/file/:name', admin, (req, res) => {
