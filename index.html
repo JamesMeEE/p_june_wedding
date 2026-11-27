@@ -217,7 +217,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
   animation:introFailsafe 0s 12s forwards}      /* กันพลาด: ถ้าสคริปต์ไม่ทำงาน ฉากนี้หายเองหลัง 12 วินาที */
 @keyframes introFailsafe{to{visibility:hidden}}
 .intro.out{opacity:0;pointer-events:none}
-.intro img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.intro img{position:absolute;top:0;left:50%;translate:-50% 0;width:var(--cw);height:100%;object-fit:cover;object-position:50% 50%}      /* เต็มความกว้างการ์ด (มือถือ = เต็มจอ, คอม = กว้างเท่าการ์ด 480px) จอที่เตี้ยกว่าภาพจะตัดส่วนบน-ล่าง (ส่วนโปร่งใสก่อน) แทนการเว้นขอบดำข้าง ๆ */
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{transition-duration:.01s !important;transition-delay:0s !important;animation:none !important}
