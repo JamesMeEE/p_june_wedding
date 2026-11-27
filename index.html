@@ -97,7 +97,8 @@ a.a, button.a{display:block}
 /* ================= หน้า 3 : สวน / Location ================= */
 .p-garden{--dw:946;margin-top:calc(-74 * var(--u))}      /* ให้ลายลูกไม้ลอดใต้ขอบกระดาษฉีก */
 .p-garden > .bg, .p-theme > .bg, .p-wishes > .bg{width:100%;height:auto}
-.p-garden > .bg{width:104.6%;margin-left:-2.3%}      /* ขยายให้ภาพสวนชิดขอบซ้ายขวา (ตัดขอบกระดาษขาวออก) */
+/* กระดาษฉีก (paper-top) ทับรอยต่อกับหน้าบน · ภาพสวนโปร่งใสเหนือขอบกระดาษ ลายลูกไม้หน้าบนจึงโผล่ตรงนั้น */
+.p-garden > .paper{position:absolute;left:0;top:0;width:100%;height:auto;pointer-events:none}
 
 /* ================= หน้า 4 : Theme / ตอบรับ ================= */
 .p-theme{--dw:945;margin-top:calc(-140 * var(--u));height:calc(1527 * var(--u));      /* สั้นลง = ขอบลูกไม้หน้า 5 ขึ้นมาพาดห่านตัวล่าง */
@@ -152,7 +153,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 .thanks button{margin-top:16px;padding:10px 22px;border-radius:999px;border:1px solid #fff;color:#fff;font-size:14px}
 
 /* ================= ท้ายสุด : Thank you (ภาพต่อเนื่อง 8 เฟรม) ================= */
-.p-ending{--dw:946;margin-top:calc(-14 * var(--u))}
+.p-ending{--dw:946;margin-top:calc(-40 * var(--u))}      /* ขอบกระดาษฉีกด้านบนเลื่อนขึ้นไปทับขอบล่างของหน้าคำอวยพร */
 .p-ending img{width:100%;height:auto}
 .p-ending .fr{position:absolute;left:0;top:0;visibility:hidden}      /* สลับภาพทันที ไม่เลือน */
 .p-ending .fr.on{visibility:visible}
@@ -206,12 +207,75 @@ input.wish-field{padding-top:0;padding-bottom:0}
 /* ช่องเลือกไฟล์: ซ่อนจากสายตาแต่ไม่ใช้ display:none (เบราว์เซอร์ในแอปบางตัวไม่ยอมเปิดตัวเลือกไฟล์ถ้าซ่อนแบบนั้น) */
 .file-in{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 
+/* ---------- Intro ตอนเปิดเว็บ: ภาพ intro1–8 เล่นต่อกันเหมือนภาพเคลื่อนไหว แล้วค่อย ๆ เลือนหายไป (สคริปต์อยู่ใต้ <body>) ---------- */
+.intro{position:fixed;inset:0;z-index:120;background:#000;touch-action:none;cursor:pointer;transition:opacity 1.4s var(--ease-soft);
+  animation:introFailsafe 0s 15s forwards}      /* กันพลาด: ถ้าสคริปต์ไม่ทำงาน ฉากนี้หายเองหลัง 15 วินาที */
+@keyframes introFailsafe{to{visibility:hidden}}
+.intro.out{opacity:0;pointer-events:none}
+.intro img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;visibility:hidden}      /* สลับภาพทันที ไม่เลือน (เหมือนภาพท้ายเว็บ) */
+.intro img.on{visibility:visible}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{transition-duration:.01s !important;transition-delay:0s !important;animation:none !important}
 }
 </style>
 </head>
 <body>
+
+<!-- ================= Intro: ภาพเล่นต่อกันแล้วค่อย ๆ เลือนหายไป เผยหน้าเว็บ ================= -->
+<div class="intro" id="intro" aria-hidden="true">
+  <img src="assets/intro1.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro2.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro3.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro4.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro5.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro6.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro7.webp" alt="" width="900" height="1306" fetchpriority="high">
+  <img src="assets/intro8.webp" alt="" width="900" height="1306" fetchpriority="high">
+</div>
+<script>
+/* ---------- Intro ----------
+   รอภาพโหลดครบ (ไม่เกิน 5 วินาที) → เล่นภาพ 1 ถึง 8 ทีละภาพ → ค้างภาพสุดท้ายครู่หนึ่ง → ค่อย ๆ เลือนหาย หน้าเว็บค่อย ๆ ชัดขึ้นมา
+   แตะจอ = ข้ามไปเลือนหายเลย (การแตะนั้นเริ่มเพลงไปด้วย)
+   ไม่เล่นในหน้า /edit, ลิงก์ /wishes และเครื่องที่ตั้งค่าลดการเคลื่อนไหว
+   หน้าเว็บรอ window.JN_INTRO ก่อนเริ่มเอฟเฟกต์ "เลื่อนแล้วค่อย ๆ โผล่"                                        */
+window.JN_INTRO = new Promise(function (done) {
+  var FRAME_MS = 600,      // เวลาต่อภาพ (มิลลิวินาที) · เลขมาก = ช้าลง
+      HOLD_MS = 1200,      // ค้างภาพสุดท้ายนานเท่านี้ก่อนเริ่มเลือน
+      FADE_MS = 1400;      // เวลาเลือนหาย (ให้ตรงกับ transition ของ .intro ใน CSS)
+  var el = document.getElementById('intro'), frames = Array.prototype.slice.call(el.querySelectorAll('img'));
+  var ended = false, timer = null, at = -1;
+  function remove() { if (el.parentNode) el.parentNode.removeChild(el); document.body.classList.remove('locked'); done(); }
+  function fadeOut() {
+    if (ended) return; ended = true; clearTimeout(timer);
+    if (at < 0) show(0);
+    el.classList.add('out'); document.body.classList.remove('locked'); done();
+    setTimeout(remove, FADE_MS + 100);
+  }
+  function show(i) { at = i; frames.forEach(function (f, k) { f.classList.toggle('on', k === i); }); }
+  function ready(f) { return f.complete && f.naturalWidth > 0; }
+  function step() {
+    var next = at + 1;
+    if (next >= frames.length) { timer = setTimeout(fadeOut, HOLD_MS); return; }
+    if (!ready(frames[next]) && !frames[next].failed) { timer = setTimeout(step, 150); return; }      // ภาพยังโหลดไม่เสร็จ รอก่อน
+    show(next); timer = setTimeout(step, FRAME_MS);
+  }
+  try {
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (/^\/(edit|wishes)\/?$/.test(location.pathname) || location.hash === '#wishes' || reduce) { remove(); return; }
+    document.body.classList.add('locked');
+    var left = frames.length, started = false;
+    var go = function () { if (!started && !ended) { started = true; step(); } };
+    frames.forEach(function (f) {
+      var ok = function () { if (--left === 0) go(); };
+      if (f.complete) ok(); else { f.addEventListener('load', ok); f.addEventListener('error', function () { f.failed = true; ok(); }); }
+    });
+    setTimeout(go, 5000);
+    el.addEventListener('pointerdown', fadeOut);
+    setTimeout(fadeOut, 16000);      // กันค้าง
+  } catch (err) { console.error('[intro]', err); remove(); }
+});
+</script>
 
 <div class="app">
 
@@ -254,7 +318,8 @@ input.wish-field{padding-top:0;padding-bottom:0}
 
   <!-- ================= หน้า 3 : Location / Plan ================= -->
   <section class="page p-garden">
-    <img class="bg" src="assets/bg-garden.webp" alt="" width="945" height="1664" loading="lazy">
+    <img class="bg" src="assets/bg-garden.webp?v=2" alt="" width="945" height="1664" loading="lazy">
+    <img class="paper" src="assets/paper-top.webp" alt="" width="945" height="232" loading="lazy">
     <img class="a reveal" style="--x:199;--y:114;--w:542" src="assets/location.webp" alt="Location — สักกายะ | SAK-KA-YA" width="542" height="194" loading="lazy">
     <a class="a tap reveal bob" id="mapBtn" style="--bd:.3s;--x:275;--y:353;--w:393" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img src="assets/btn-maps.webp" alt="" width="860" height="147" loading="lazy"></a>
     <img class="a reveal bob" style="--bd:.6s;--x:678;--y:338;--w:97;rotate:28deg;pointer-events:none" src="assets/click.webp" alt="" width="260" height="180" loading="lazy">
@@ -310,7 +375,7 @@ input.wish-field{padding-top:0;padding-bottom:0}
 
   <!-- ================= ท้ายสุด : Thank you ================= -->
   <section class="page p-ending" id="ending">
-    <img src="assets/ending1.webp" alt="Thank you" width="946" height="762" loading="lazy">
+    <img src="assets/ending1.webp?v=2" alt="Thank you" width="946" height="762" loading="lazy">
   </section>
 
 </div>
@@ -420,6 +485,7 @@ window.CONFIG = {
   photos: ['assets/full1.webp', 'assets/full2.webp', 'assets/full3.webp', 'assets/full4.webp'],
   endingFrames: 8,                                 // ภาพท้ายเว็บ: assets/ending1.webp … ending8.webp เล่นต่อกันตามลำดับ
   endingFrameMs: 700,                              // เวลาต่อภาพ (มิลลิวินาที) · เลขมาก = ช้าลง
+  endingHoldMs: 1800,                              // ค้างภาพสุดท้าย (Thank You) นานเท่านี้ก่อนวนกลับไปภาพแรก
   // วิดีโออวยพร: Full HD ยาวสุด 60 วินาที
   videoSeconds: 60,
   videoWidth: 1920, videoHeight: 1080,
@@ -530,6 +596,7 @@ window.addEventListener('pagehide', () => audio.pause());
 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
 /* ---------- เลื่อนแล้วค่อย ๆ โผล่ ---------- */
+(window.JN_INTRO || Promise.resolve()).then(() => {      // รอ Intro เปิดเผยหน้าเว็บก่อน ซองจดหมายจะได้เด้งขึ้นมาให้เห็น
 try {
   const io = new IntersectionObserver(es => {
     es.filter(e => e.isIntersecting)
@@ -538,6 +605,7 @@ try {
   }, { threshold: .1, rootMargin: '0px 0px -6% 0px' });
   $$('.reveal:not(.in)').forEach(el => io.observe(el));
 } catch (err) { console.error(err); $$('.reveal').forEach(el => el.classList.add('in')); }   // ไม่รองรับ → แสดงทุกอย่างเลย (ไม่งั้นแบบฟอร์มจะมองไม่เห็น)
+});
 
 /* ---------- ดูรูปใหญ่ ---------- */
 safe('lightbox', () => {
@@ -567,26 +635,25 @@ lb.addEventListener('touchend', e => {
 });
 });
 
-/* ---------- ภาพท้ายเว็บ: เล่นต่อกันทีละภาพเมื่อเลื่อนมาถึง แล้วค้างที่ภาพสุดท้าย (ไม่วน) ---------- */
+/* ---------- ภาพท้ายเว็บ: เล่นต่อกันทีละภาพตามลำดับเมื่อเลื่อนมาถึง แล้ววนซ้ำไปเรื่อย ๆ ---------- */
 safe('ending', () => {
   const box = $('#ending'), frames = [box.querySelector('img')];
   let timer = null, at = 0;
   function load() {      // โหลดเฟรมที่เหลือเมื่อใกล้ถึง จะได้ไม่ถ่วงตอนเปิดเว็บ
     for (let k = frames.length + 1; k <= C.endingFrames; k++) {
-      const im = new Image(); im.className = 'fr'; im.alt = ''; im.width = 946; im.height = 762; im.src = `assets/ending${k}.webp`;
+      const im = new Image(); im.className = 'fr'; im.alt = ''; im.width = 946; im.height = 762; im.src = `assets/ending${k}.webp?v=2`;
       box.appendChild(im); frames.push(im);
     }
   }
   const ready = f => f.complete && f.naturalWidth > 0;
   function show(i) { at = i; frames.forEach((f, k) => { if (k) f.classList.toggle('on', k === i); }); }      // ภาพแรกเป็นฐานอยู่ข้างล่างเสมอ
   function step() {
-    const next = at + 1;
-    if (next >= frames.length) { timer = null; return; }      // ถึงภาพสุดท้าย (Thank You) แล้วค้างไว้ ไม่วน
+    const next = (at + 1) % frames.length;      // ภาพสุดท้ายแล้ว → กลับไปภาพแรก
     if (!ready(frames[next])) { timer = setTimeout(step, 200); return; }      // ยังโหลดไม่เสร็จ รอก่อน
     show(next);
-    timer = setTimeout(step, C.endingFrameMs);
+    timer = setTimeout(step, next === frames.length - 1 ? C.endingHoldMs : C.endingFrameMs);
   }
-  function play() { if (timer || at) return; load(); timer = setTimeout(step, C.endingFrameMs); }
+  function play() { if (timer) return; load(); timer = setTimeout(step, C.endingFrameMs); }
   function stop() { clearTimeout(timer); timer = null; }
   try {
     new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) load(); }, { rootMargin: '900px 0px' }).observe(box);
