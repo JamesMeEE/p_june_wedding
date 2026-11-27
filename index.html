@@ -311,6 +311,42 @@ input.wish-field{padding-top:0;padding-bottom:0}
 
 </div>
 
+<script>
+/* ---------- ตำแหน่งที่แก้จากหน้า /edit ----------
+   เซิร์ฟเวอร์ใส่ค่าที่บันทึกไว้แทน /*LAYOUT*\/ ตอนส่งหน้าเว็บ · ทุกชิ้น .a ได้ชื่อ (key) จากหน้า + id/ชื่อรูป
+   ใส่ค่าทันทีก่อนรูปโหลด จะได้ไม่เห็นตำแหน่งเดิมแวบขึ้นมา */
+window.JN_LAYOUT = /*LAYOUT*/{};
+window.JNLayout = (function () {
+  const items = [], byKey = {};
+  function apply(it, rec) {
+    const v = Object.assign({}, it.base, rec || {}), s = it.el.style;
+    s.setProperty('--x', v.x); s.setProperty('--y', v.y); s.setProperty('--w', v.w);
+    if ('h' in it.base) s.setProperty('--h', v.h);
+    s.rotate = v.r + 'deg';
+  }
+  try {
+    const map = window.JN_LAYOUT || {};
+    const num = (el, p) => { const v = parseFloat(el.style.getPropertyValue(p)); return isFinite(v) ? v : null; };
+    Array.prototype.forEach.call(document.querySelectorAll('.page'), sec => {
+      const pg = (sec.className.match(/\bp-[\w-]+/) || ['page'])[0], seen = {};
+      Array.prototype.forEach.call(sec.querySelectorAll('.a'), el => {
+        const im = el.tagName === 'IMG' ? el : /^(A|BUTTON|LABEL)$/.test(el.tagName) ? el.querySelector('img') : null;
+        const b = el.id || el.getAttribute('name') || (im && (im.getAttribute('src') || '').replace(/^.*\//, '').replace(/\.\w+$/, ''))
+          || Array.prototype.find.call(el.classList, c => !/^(a|h|tap|reveal|bob|deco|in)$/.test(c)) || el.tagName.toLowerCase();
+        const n = seen[b] = (seen[b] || 0) + 1, key = pg + '/' + b + (n > 1 ? '#' + n : '');
+        const base = { x: num(el, '--x'), y: num(el, '--y'), w: num(el, '--w'), h: num(el, '--h'), r: parseFloat(getComputedStyle(el).rotate) || 0 };
+        if (base.x === null || base.y === null || base.w === null) return;
+        if (base.h === null) delete base.h;
+        const it = { el, key, base, name: (im && im.alt) || el.getAttribute('aria-label') || el.getAttribute('placeholder') || b };
+        items.push(it); byKey[key] = it; el.dataset.ek = key;
+        if (map[key]) apply(it, map[key]);
+      });
+    });
+  } catch (err) { console.error('[layout]', err); }
+  return { items, byKey, apply };
+})();
+</script>
+
 <!-- กล้องอัดวิดีโออวยพร -->
 <div class="cam" id="cam" role="dialog" aria-modal="true" aria-label="อัดวิดีโออวยพร">
   <video id="camView" playsinline muted autoplay></video>
@@ -379,6 +415,8 @@ window.CONFIG = {
 const $ = s => document.querySelector(s), $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 const C = window.CONFIG, when = new Date(C.date);
 const safe = (name, fn) => { try { fn(); } catch (err) { console.error('[' + name + ']', err); } };
+const EDIT = /^\/edit\/?$/.test(location.pathname);      // หน้าแก้ตำแหน่ง: ไม่เปิดเพลงเอง แล้วโหลดเครื่องมือแก้ไข
+if (EDIT) { C.autoplay = false; const s = document.createElement('script'); s.src = '/edit.js'; document.body.appendChild(s); }
 
 $('#mapBtn').href = C.mapUrl;
 $('#lineBtn').href = C.lineUrl;

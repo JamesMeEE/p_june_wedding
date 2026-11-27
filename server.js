@@ -5,6 +5,7 @@
  *   ADMIN_PASSWORD  รหัสผ่านเข้าหน้า /admin (ไม่ตั้ง = ปิดหน้าแอดมิน)
  *   DATA_DIR        โฟลเดอร์เก็บข้อมูล (Dockerfile ตั้งเป็น /data → ต้อง mount Volume ที่ /data)
  *   MAX_TOTAL_GB    เพดานพื้นที่ไฟล์รวม (ค่าเริ่มต้น 30)
+ *   EDIT_PASSWORD   รหัสเข้าหน้า /edit แก้ตำแหน่งชิ้นงาน (ค่าเริ่มต้น 1150)
  */
 const express = require('express');
 const compression = require('compression');
@@ -21,7 +22,9 @@ const UP = path.join(DATA, 'uploads');
 const TMP = path.join(DATA, 'tmp');
 const RSVP_FILE = path.join(DATA, 'rsvp.jsonl');
 const WISH_FILE = path.join(DATA, 'wishes.jsonl');
+const LAYOUT_FILE = path.join(DATA, 'layout.json');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const EDIT_PASSWORD = process.env.EDIT_PASSWORD || '1150';
 const MAX_TOTAL = (Number(process.env.MAX_TOTAL_GB) || 30) * 1024 ** 3;
 
 const CHUNK = 4 * 1024 * 1024;                       // ขนาดชิ้นที่ให้เบราว์เซอร์ส่ง
@@ -73,20 +76,70 @@ function limit(max, windowMs) {
 }
 setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.some(t => now - t < 3600e3)) hits.delete(k); }, 600e3).unref();
 
+/* ---------- ตำแหน่งชิ้นงานที่แก้จากหน้า /edit ---------- */
+let layout = {};
+try { layout = JSON.parse(fs.readFileSync(LAYOUT_FILE, 'utf8')) || {}; } catch { layout = {}; }
+const sameSecret = (given, real) => crypto.timingSafeEqual(crypto.createHash('sha256').update(String(given || '')).digest(), crypto.createHash('sha256').update(real).digest());
+function cleanLayout(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  const ents = Object.entries(v); if (ents.length > 400) return null;
+  const out = Object.create(null);
+  for (const [k, r] of ents) {
+    if (!/^[\w-]{1,40}\/[\w.-]{1,80}(#\d{1,3})?$/.test(k) || !r || typeof r !== 'object') return null;
+    const o = {};
+    for (const f of ['x', 'y', 'w', 'h', 'r']) {
+      if (r[f] == null) continue;
+      const n = Number(r[f]); if (!Number.isFinite(n) || Math.abs(n) > 20000) return null;
+      o[f] = Math.round(n * 100) / 100;
+    }
+    if (!('x' in o && 'y' in o && 'w' in o) || o.w <= 0) return null;
+    out[k] = o;
+  }
+  return out;
+}
+
 /* ---------- หน้าเว็บ ---------- */
 const staticOpts = { maxAge: '7d', index: false, dotfiles: 'deny' };
-app.get(['/', '/index.html'], (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(ROOT, 'index.html')); });
+// ใส่ตำแหน่งที่บันทึกไว้ลงในหน้าเลย แขกจะไม่เห็นตำแหน่งเดิมแวบขึ้นมาก่อน
+async function sendPage(res, cache) {
+  const data = JSON.stringify(layout).replace(/</g, '\\u003c');
+  const html = (await fsp.readFile(path.join(ROOT, 'index.html'), 'utf8')).replace('/*LAYOUT*/{}', () => data);
+  res.set('Cache-Control', cache).type('html').send(html);
+}
+app.get(['/', '/index.html'], wrap((req, res) => sendPage(res, 'no-cache')));
 // ลิงก์แยก: เปิดมาแล้วเริ่มที่หน้าเขียนคำอวยพรเลย (หน้าเว็บเดียวกัน index.html เลื่อนลงไปเอง)
-app.get('/wishes', (req, res) => {
+app.get('/wishes', wrap((req, res) => {
   if (req.path !== '/wishes') return res.redirect('/wishes');      // ตัด / ท้ายลิงก์ ไม่งั้นหารูปไม่เจอ
-  res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(ROOT, 'index.html'));
-});
+  return sendPage(res, 'no-cache');
+}));
+// หน้าแก้ตำแหน่ง: หน้าเว็บเดียวกัน + โหลด edit.js (ต้องใส่รหัสก่อนถึงจะแก้/บันทึกได้)
+app.get('/edit', wrap((req, res) => {
+  if (req.path !== '/edit') return res.redirect('/edit');
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  return sendPage(res, 'no-store');
+}));
+app.get('/edit.js', (req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(ROOT, 'edit.js')); });
 app.use('/assets', express.static(path.join(ROOT, 'assets'), staticOpts));
 app.use('/music', express.static(path.join(ROOT, 'music'), staticOpts));
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 /* ---------- API ---------- */
 const json = express.json({ limit: '64kb' });
+
+app.post('/api/edit/login', json, limit(10, 600e3), (req, res) => {
+  if (!sameSecret(req.body.pin, EDIT_PASSWORD)) return fail(res, 401, 'รหัสไม่ถูกต้อง');
+  res.json({ ok: true });
+});
+app.put('/api/layout', express.json({ limit: '256kb' }), limit(120, 600e3), wrap(async (req, res) => {
+  if (!sameSecret(req.get('x-edit-key'), EDIT_PASSWORD)) return fail(res, 401, 'รหัสไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่');
+  const next = cleanLayout(req.body.layout);
+  if (!next) return fail(res, 400, 'ข้อมูลตำแหน่งไม่ถูกต้อง');
+  const tmp = LAYOUT_FILE + '.tmp';
+  await fsp.writeFile(tmp, JSON.stringify(next));
+  await fsp.rename(tmp, LAYOUT_FILE);
+  layout = next;
+  res.json({ ok: true });
+}));
 
 app.post('/api/rsvp', json, limit(20, 600e3), wrap(async (req, res) => {
   const name = clean(req.body.name, 120), count = Math.floor(Number(req.body.count));
