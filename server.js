@@ -95,11 +95,12 @@ function cleanLayout(v) {
   for (const [k, r] of ents) {
     if (!/^[\w-]{1,40}\/[\w.-]{1,80}(#\d{1,3})?$/.test(k) || !r || typeof r !== 'object') return null;
     const o = {};
-    for (const f of ['x', 'y', 'w', 'h', 'r']) {
+    for (const f of ['x', 'y', 'w', 'h', 'r', 'z']) {
       if (r[f] == null) continue;
       const n = Number(r[f]); if (!Number.isFinite(n) || Math.abs(n) > 20000) return null;
       o[f] = Math.round(n * 100) / 100;
     }
+    if ('z' in o) { o.z = Math.round(o.z); if (Math.abs(o.z) > 99) return null; }      // ชั้น (ขึ้นบน/ลงล่าง)
     if (!('x' in o && 'y' in o && 'w' in o) || o.w <= 0) return null;
     out[k] = o;
   }

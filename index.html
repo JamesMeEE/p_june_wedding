@@ -37,7 +37,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* ---------- ระบบวางตำแหน่ง: ใช้พิกัดพิกเซลจากไฟล์แบบ ----------
    แต่ละหน้ากำหนด --dw = ความกว้างของไฟล์แบบ แล้ว --u = 1px ของแบบ
    ชิ้นงานใส่ style="--x:..;--y:..;--w:.." (หน่วยพิกเซลของแบบ)            */
-.page{position:relative;--u:calc(var(--cw) / var(--dw))}
+.page{position:relative;--u:calc(var(--cw) / var(--dw));isolation:isolate}      /* แต่ละหน้าเรียงชั้นของตัวเอง: ชิ้นที่ยกขึ้นบน (หน้า /edit) จะไม่ลอยไปทับหน้าอื่น */
+.page > .bg{position:relative;z-index:-100}      /* พื้นหลังอยู่ล่างสุดเสมอ ชิ้นที่ส่งลงล่าง (ชั้นติดลบ) ก็ยังอยู่เหนือพื้นหลัง */
 .a{position:absolute;left:calc(var(--x) * var(--u));top:calc(var(--y) * var(--u));width:calc(var(--w) * var(--u))}
 .a.h{height:calc(var(--h) * var(--u))}
 img.a, .a > img{height:auto}
@@ -399,6 +400,7 @@ window.JNLayout = (function () {
     s.setProperty('--x', v.x); s.setProperty('--y', v.y); s.setProperty('--w', v.w);
     if ('h' in it.base) s.setProperty('--h', v.h);
     s.rotate = v.r + 'deg';
+    s.zIndex = v.z ? String(v.z) : '';      // ชั้น: 0 = ตามลำดับเดิม · บวก = ขึ้นบน · ลบ = ลงล่าง
   }
   try {
     const map = window.JN_LAYOUT || {}, each = (list, fn) => Array.prototype.forEach.call(list, fn);
@@ -416,7 +418,7 @@ window.JNLayout = (function () {
       }
       each(sec.querySelectorAll('.a'), el => {
         const im = el.tagName === 'IMG' ? el : /^(A|BUTTON|LABEL)$/.test(el.tagName) ? el.querySelector('img') : null;
-        const base = { x: num(el, '--x'), y: num(el, '--y'), w: num(el, '--w'), h: num(el, '--h'), r: parseFloat(getComputedStyle(el).rotate) || 0 };
+        const base = { x: num(el, '--x'), y: num(el, '--y'), w: num(el, '--w'), h: num(el, '--h'), r: parseFloat(getComputedStyle(el).rotate) || 0, z: 0 };
         if (base.x === null || base.y === null || base.w === null) return;
         if (base.h === null) delete base.h;
         add(el, 'a', base, im);

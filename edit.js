@@ -3,7 +3,8 @@
    แตะชิ้นงานเพื่อเลือก (แตะซ้ำที่เดิม = เลือกชิ้นที่ซ้อนอยู่ข้างใต้)
    แล้วกดปุ่ม เลื่อน / หมุน / ขยาย-ย่อ · กด "บันทึก" แล้วแขกทุกคนเห็นตำแหน่งใหม่
    ขอบลูกไม้บนหน้า 5: เลื่อนได้แค่ขึ้น-ลง และจะพาทั้งหน้า 5 กับทุกอย่างด้านล่างเลื่อนตามไปด้วย
-   คีย์บอร์ด: ลูกศร = เลื่อน · Q/E = หมุน · + / - = ขนาด · Ctrl+Z = ย้อน · Ctrl+S = บันทึก · Esc = เลิกเลือก
+   ชั้น: "ขึ้นบน" / "ลงล่าง" สลับว่าชิ้นไหนทับชิ้นไหน (เรียงกันเฉพาะในหน้าเดียวกัน · ชิ้นในซองจดหมาย/ฟอร์มเรียงกันเองในกลุ่มนั้น)
+   คีย์บอร์ด: ลูกศร = เลื่อน · Q/E = หมุน · + / - = ขนาด · PageUp/PageDown = ขึ้นบน/ลงล่าง · Ctrl+Z = ย้อน · Ctrl+S = บันทึก · Esc = เลิกเลือก
    ============================================================ */
 (function () {
 'use strict';
@@ -24,7 +25,7 @@ const css = `
 .ed-login button{margin-top:12px;width:100%;padding:13px;border-radius:999px;background:#604330;color:#fff;font-size:16px}
 .ed-login .ed-err{min-height:1.6em;margin-top:10px;color:#a3271f;font-size:14px}
 
-body.editing{padding-bottom:250px}
+body.editing{padding-bottom:300px}
 body.editing [data-ek]{pointer-events:auto !important;cursor:pointer}
 body.editing .reveal{opacity:1 !important;translate:none !important}
 body.editing .heart{translate:none !important}
@@ -76,8 +77,15 @@ body.editing .tap:active{scale:none}
 .ed-save.dirty{background:#ff2d6f;color:#fff}
 .ed-save:disabled{opacity:.6}
 .ed-bar.min .ed-ctl,.ed-bar.min .ed-row{display:none}
+.ed-z{display:flex;gap:6px;margin-top:10px;align-items:center}
+.ed-z > span{color:#c9bfb2;font-size:12px;white-space:nowrap}
+.ed-z .ed-zb{flex:1;height:36px;border-radius:10px;background:#5d4a3b;color:#fff;font-size:13px;white-space:nowrap}
+.ed-z .ed-zb:active{background:#8a6c55}
+.ed-z b{min-width:44px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums}
+.ed-bar.min .ed-z{display:none}
+.ed-bar.nosel .ed-z{opacity:.35}
 .ed-bar.nosel .ed-ctl{opacity:.35}
-.ed-toast{position:fixed;left:50%;bottom:270px;translate:-50% 10px;z-index:210;background:rgba(30,25,20,.95);color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;
+.ed-toast{position:fixed;left:50%;bottom:320px;translate:-50% 10px;z-index:210;background:rgba(30,25,20,.95);color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;
   opacity:0;transition:opacity .25s,translate .25s;pointer-events:none;max-width:90vw;text-align:center;font-family:var(--thai)}
 .ed-toast.on{opacity:1;translate:-50% 0}
 `;
@@ -181,6 +189,12 @@ function start() {
         <button type="button" class="ed-k" data-act="out" aria-label="ย่อ">−</button>
         <button type="button" class="ed-k" data-act="in" aria-label="ขยาย">+</button></div></div>
     </div>
+    <div class="ed-z">
+      <span>ชั้น</span>
+      <button type="button" class="ed-zb" data-act="zd" aria-label="ลงล่าง">⤓ ลงล่าง</button>
+      <b class="ed-zv">–</b>
+      <button type="button" class="ed-zb" data-act="zu" aria-label="ขึ้นบน">⤒ ขึ้นบน</button>
+    </div>
     <div class="ed-row">
       <div class="ed-seg">${STEPS.map((s, i) => `<button type="button" data-step="${i}">${s.label}</button>`).join('')}</div>
       <button type="button" class="ed-sm" data-btn="undo">↶ ย้อน</button>
@@ -202,12 +216,15 @@ function start() {
   }
   function paintInfo() {
     bar.classList.toggle('nosel', !sel);
+    const zv = $('.ed-zv', bar);
     if (!sel) {
+      zv.textContent = '–';
       $('.ed-name', bar).textContent = 'แตะชิ้นงานเพื่อเลือก';
       $('.ed-val', bar).textContent = 'ถ้ามีหลายชิ้นซ้อนกัน จะมีรายการให้เลือก';
       return;
     }
     const v = cur(sel);
+    zv.textContent = sel.mode !== 'a' ? '–' : v.z ? (v.z > 0 ? '+' : '') + v.z : 'ปกติ';
     $('.ed-name', bar).textContent = (recs[sel.key] ? '● ' : '') + sel.name;
     $('.ed-val', bar).textContent = sel.mode === 's'
       ? `เลื่อนขึ้น-ลง y ${r2(v.y)} · ใช้ได้แค่ปุ่ม ↑ ↓`
@@ -248,9 +265,12 @@ function start() {
     if (!sel) { if (first) toast('แตะเลือกชิ้นงานก่อน'); return; }
     const v = cur(sel), S = STEPS[step];
     if (sel.mode === 's' && a !== 'up' && a !== 'down') { if (first) toast('ขอบลูกไม้เลื่อนได้แค่ขึ้น-ลง'); return; }
+    if ((a === 'zu' || a === 'zd') && sel.mode !== 'a') { if (first) toast('ชิ้นนี้สลับชั้นไม่ได้'); return; }
+    if ((a === 'zu' || a === 'zd') && !first) return;      // สลับชั้นทีละขั้น ไม่ต้องรัวตอนกดค้าง
     if (first) undo.push(snap(sel));
     if (a === 'up') v.y -= S.m; else if (a === 'down') v.y += S.m;
     else if (a === 'left') v.x -= S.m; else if (a === 'right') v.x += S.m;
+    else if (a === 'zu') v.z = (v.z || 0) + 1; else if (a === 'zd') v.z = (v.z || 0) - 1;
     else if (a === 'rl') v.r -= S.r; else if (a === 'rr') v.r += S.r;
     else if (a === 'in' || a === 'out') {
       const f = a === 'in' ? 1 + S.s : 1 / (1 + S.s);
@@ -367,7 +387,7 @@ function start() {
     if (mod && k.toLowerCase() === 'z') { e.preventDefault(); doUndo(); return; }
     if (mod && k.toLowerCase() === 's') { e.preventDefault(); save(); return; }
     if (k === 'Escape') { if (picker.classList.contains('on')) closePick(); else select(null); return; }
-    const a = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', q: 'rl', Q: 'rl', e: 'rr', E: 'rr', '+': 'in', '=': 'in', '-': 'out', _: 'out' }[k];
+    const a = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', q: 'rl', Q: 'rl', e: 'rr', E: 'rr', '+': 'in', '=': 'in', '-': 'out', _: 'out', PageUp: 'zu', PageDown: 'zd' }[k];
     if (a) { e.preventDefault(); act(a, !e.repeat); }
   });
   window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
