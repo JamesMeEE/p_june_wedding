@@ -46,6 +46,14 @@ app.use((req, res, next) => {
   next();
 });
 app.use(compression());
+// API สาธารณะ (ตอบรับ/คำอวยพร/อัปโหลด) รับคำขอจากต่างโดเมนได้: เผื่อหน้าเว็บถูกเปิดผ่านตัวกลางแล้วต้องส่งตรงมาที่โดเมนจริง
+// (ไม่รวม /api/edit และ /api/layout ซึ่งต้องใช้รหัส)
+app.use((req, res, next) => {
+  if (!/^\/api\/(rsvp|wish|upload)(\/|$)/.test(req.path)) return next();
+  res.set({ 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '86400' });
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
 
 /* ---------- ตัวช่วย ---------- */
 const clean = (v, max) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B-\u001F]/g, '').trim().slice(0, max);

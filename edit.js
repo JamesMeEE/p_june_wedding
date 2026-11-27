@@ -24,7 +24,7 @@ const css = `
 .ed-login .ed-err{min-height:1.6em;margin-top:10px;color:#a3271f;font-size:14px}
 
 body.editing{padding-bottom:250px}
-body.editing .a{pointer-events:auto !important;cursor:pointer}
+body.editing [data-ek]{pointer-events:auto !important;cursor:pointer}
 body.editing .reveal{opacity:1 !important;translate:none !important}
 body.editing .heart{translate:none !important}
 body.editing *{animation:none !important}
@@ -131,15 +131,21 @@ function start() {
 
   // ชื่อภาษาไทยสำหรับชิ้นที่ไม่มีคำอธิบายในรูป
   const LABELS = {
-    'env-front': 'ซองจดหมาย (ฝาหน้า)', 'env-back': 'ซองจดหมาย (ด้านหลัง)', 'heart-clip': 'กรอบที่หัวใจโผล่ขึ้นมา',
+    'env-front': 'ซองจดหมาย (ฝาหน้า)', 'env-back': 'ซองจดหมาย (ด้านหลัง)', 'heart-clip': 'กรอบที่หัวใจโผล่ (เลื่อนกรอบ หัวใจอยู่ที่เดิม)',
     click: 'ป้าย Click', click2: 'ป้าย Click', swan: 'หงส์', flowers: 'ช่อดอกไม้', strip: 'แถบรูป 4 ช่อง', vinyl: 'แผ่นเสียง',
     'swan-blue-june': 'หงส์ฟ้า (June)', 'swan-blue-non': 'หงส์ฟ้า (Non)', 'rsvp-box': 'กล่องฟอร์มตอบรับ',
     'r-name': 'ช่องกรอกชื่อ (ตอบรับ)', 'r-count': 'ช่องจำนวนคน', cMinus: 'ปุ่ม −', cPlus: 'ปุ่ม +', 'btn-submit': 'ปุ่มส่งข้อมูล',
     rsvpDone: 'ข้อความ "ได้รับข้อมูลแล้ว"', mapBtn: 'ปุ่ม Google Maps', lineBtn: 'ปุ่ม LINE',
     name: 'ช่องกรอกชื่อ (คำอวยพร)', message: 'ช่องเขียนคำอวยพร', 'ic-photo': 'ไอคอนรูป', 'ic-video': 'ไอคอนวิดีโอ',
     'btn-send': 'ภาพปุ่มส่งคำอวยพร', pickPhoto: 'พื้นที่กดแนบรูป', pickVideo: 'พื้นที่กดอัดวิดีโอ', hot: 'พื้นที่กดส่งคำอวยพร',
+    'cd-d': 'ตัวเลขนับถอยหลัง: วัน', 'cd-h': 'ตัวเลขนับถอยหลัง: ชั่วโมง', 'cd-m': 'ตัวเลขนับถอยหลัง: นาที', 'cd-s': 'ตัวเลขนับถอยหลัง: วินาที',
+    colon: 'เครื่องหมาย : (นับถอยหลัง)', nowPlaying: 'ชื่อเพลงบนแผ่นเสียง',
   };
   L.items.forEach(it => { const b = it.key.split('/')[1].replace(/#\d+$/, ''); if (LABELS[b]) it.name = LABELS[b]; });
+
+  L.items.forEach(it => {
+    it.kids = it.mode === 'a' ? L.items.filter(c => c !== it && c.mode === 'a' && it.el.contains(c.el)) : [];
+  });
 
   const recs = JSON.parse(JSON.stringify(window.JN_LAYOUT || {}));
   const byEl = new Map(L.items.map(it => [it.el, it]));
@@ -201,13 +207,16 @@ function start() {
     }
     const v = cur(sel);
     $('.ed-name', bar).textContent = (recs[sel.key] ? '● ' : '') + sel.name;
-    $('.ed-val', bar).textContent = `x ${r2(v.x)} · y ${r2(v.y)} · กว้าง ${r2(v.w)} · หมุน ${r2(v.r)}°`;
+    $('.ed-val', bar).textContent = sel.mode === 't'
+      ? `เลื่อน x ${r2(v.x)} · y ${r2(v.y)} · ขนาด ${r2(v.w)}% · หมุน ${r2(v.r)}°`
+      : `x ${r2(v.x)} · y ${r2(v.y)} · กว้าง ${r2(v.w)} · หมุน ${r2(v.r)}°`;
   }
   function place() {
     const it = peek || sel;      // ระหว่างเลือกจากรายการ: กรอบชี้ชิ้นที่นิ้ว/เมาส์อยู่
     box.classList.toggle('peek', !!peek);
     if (!it || !it.el.offsetWidth) { box.style.display = 'none'; return; }
-    const n = it.el, rc = n.getBoundingClientRect(), w = n.offsetWidth, h = n.offsetHeight;
+    const k = it.mode === 't' ? cur(it).w / 100 : 1;      // ตัวหนังสือขยายด้วย scale → ขนาดจริงต้องคูณเอง
+    const n = it.el, rc = n.getBoundingClientRect(), w = n.offsetWidth * k, h = n.offsetHeight * k;
     box.style.display = 'block';
     box.style.width = w + 'px'; box.style.height = h + 'px';
     box.style.left = (rc.left + rc.width / 2 + window.pageXOffset - w / 2) + 'px';
@@ -217,23 +226,30 @@ function start() {
   (function loop() { place(); requestAnimationFrame(loop); })();      // ตามกรอบไว้ตลอด (รูปโหลดเสร็จ ขนาดหน้าเปลี่ยน ฯลฯ)
 
   function select(it) { sel = it || null; paintInfo(); }
-  function set(it, v) {
+  function put(it, v) {
     const out = {};
     Object.keys(it.base).forEach(k => { out[k] = r2(v[k]); });
     if (same(out, it.base)) delete recs[it.key]; else recs[it.key] = out;
     L.apply(it, recs[it.key]);
+  }
+  function set(it, v) {
+    const old = cur(it), dx = v.x - old.x, dy = v.y - old.y;
+    put(it, v);
+    if (dx || dy) it.kids.forEach(c => { const cv = cur(c); cv.x -= dx; cv.y -= dy; put(c, cv); });   // ชิ้นข้างในอยู่ที่เดิม
     dirty = true; paintSave(); paintInfo();
   }
+  const snap = it => [it].concat(it.kids).map(c => [c.key, recs[c.key] ? Object.assign({}, recs[c.key]) : null]);
 
   function act(a, first) {
     if (!sel) { if (first) toast('แตะเลือกชิ้นงานก่อน'); return; }
     const v = cur(sel), S = STEPS[step];
-    if (first) undo.push([sel.key, recs[sel.key] ? Object.assign({}, recs[sel.key]) : null]);
+    if (first) undo.push(snap(sel));
     if (a === 'up') v.y -= S.m; else if (a === 'down') v.y += S.m;
     else if (a === 'left') v.x -= S.m; else if (a === 'right') v.x += S.m;
     else if (a === 'rl') v.r -= S.r; else if (a === 'rr') v.r += S.r;
     else if (a === 'in' || a === 'out') {
       const f = a === 'in' ? 1 + S.s : 1 / (1 + S.s);
+      if (sel.mode === 't') { v.w *= f; set(sel, v); return; }      // ตัวหนังสือขยายจากตรงกลางอยู่แล้ว
       const u = sel.el.offsetWidth / v.w, H = u > 0 ? sel.el.offsetHeight / u : 0;      // ขยายจากตรงกลาง ไม่ใช่จากมุมบนซ้าย
       v.x -= v.w * (f - 1) / 2; v.y -= H * (f - 1) / 2;
       v.w *= f; if ('h' in v) v.h *= f;
@@ -270,7 +286,7 @@ function start() {
       b.type = 'button'; b.className = 'ed-pick-i' + (it === sel ? ' cur' : ''); b.dataset.i = i; b.setAttribute('role', 'menuitem');
       const im = thumbOf(it), th = document.createElement('span'); th.className = 'ed-th';
       if (im && im.getAttribute('src')) { const t = new Image(); t.src = im.currentSrc || im.src; t.alt = ''; th.appendChild(t); }
-      else th.textContent = it.el.tagName === 'INPUT' || it.el.tagName === 'TEXTAREA' ? '✎' : '◻';
+      else th.textContent = it.el.tagName === 'INPUT' || it.el.tagName === 'TEXTAREA' ? '✎' : it.mode === 't' ? (it.el.textContent.trim().slice(0, 3) || 'Aa') : '◻';
       const tx = document.createElement('span'); tx.className = 'ed-pt';
       const nm = document.createElement('b'); nm.textContent = it.name;
       const sub = document.createElement('small'); sub.textContent = (i === 0 ? 'บนสุด · ' : 'ชั้นที่ ' + (i + 1) + ' · ') + it.key.split('/')[1];
@@ -305,9 +321,12 @@ function start() {
 
   function doUndo() {
     const u = undo.pop(); if (!u) { toast('ไม่มีอะไรให้ย้อนแล้ว'); return; }
-    const it = L.byKey[u[0]]; if (!it) return;
-    if (u[1]) recs[it.key] = u[1]; else delete recs[it.key];
-    L.apply(it, recs[it.key]); dirty = true; paintSave(); select(it);
+    u.forEach(([k, rec]) => {
+      const c = L.byKey[k]; if (!c) return;
+      if (rec) recs[k] = rec; else delete recs[k];
+      L.apply(c, recs[k]);
+    });
+    dirty = true; paintSave(); select(L.byKey[u[0][0]] || null);
   }
   function save() {
     if (saving) return;
@@ -330,7 +349,7 @@ function start() {
     else if (k === 'undo') doUndo();
     else if (k === 'reset') {
       if (!sel) { toast('แตะเลือกชิ้นงานก่อน'); return; }
-      undo.push([sel.key, recs[sel.key] ? Object.assign({}, recs[sel.key]) : null]);
+      undo.push(snap(sel));
       set(sel, Object.assign({}, sel.base)); toast('คืนค่าเดิมแล้ว (ยังต้องกดบันทึก)');
     }
     else if (k === 'save') save();

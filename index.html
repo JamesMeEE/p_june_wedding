@@ -314,34 +314,47 @@ input.wish-field{padding-top:0;padding-bottom:0}
 
 <script>
 /* ---------- ตำแหน่งที่แก้จากหน้า /edit ----------
-   เซิร์ฟเวอร์ใส่ค่าที่บันทึกไว้แทน /*LAYOUT*\/ ตอนส่งหน้าเว็บ · ทุกชิ้น .a ได้ชื่อ (key) จากหน้า + id/ชื่อรูป
-   ใส่ค่าทันทีก่อนรูปโหลด จะได้ไม่เห็นตำแหน่งเดิมแวบขึ้นมา */
+   เซิร์ฟเวอร์ใส่ค่าที่บันทึกไว้แทน /*LAYOUT*\/ ตอนส่งหน้าเว็บ · ใส่ค่าทันทีก่อนรูปโหลด จะได้ไม่เห็นตำแหน่งเดิมแวบขึ้นมา
+   ชิ้นงานมี 2 แบบ
+     'a' = ชิ้น .a (รูป/ปุ่ม/ช่องกรอก) แก้ที่ --x --y --w (--h) และ rotate โดยตรง
+     't' = ตัวหนังสือที่วางด้วยวิธีอื่น (ตัวเลขนับถอยหลัง, ชื่อเพลงบนแผ่นเสียง) ขยับด้วย transform
+           x, y = ระยะเลื่อน (หน่วยพิกเซลของแบบ) · w = ขนาดเป็น % · r = องศา
+   key = ชื่อหน้า + id/ชื่อรูป (ซ้ำกันจะต่อท้าย #2, #3) */
 window.JN_LAYOUT = /*LAYOUT*/{};
 window.JNLayout = (function () {
   const items = [], byKey = {};
   function apply(it, rec) {
     const v = Object.assign({}, it.base, rec || {}), s = it.el.style;
+    if (it.mode === 't') {
+      s.transform = rec ? `translate(calc(${v.x} * var(--u)), calc(${v.y} * var(--u))) rotate(${v.r}deg) scale(${v.w / 100})` : '';
+      return;
+    }
     s.setProperty('--x', v.x); s.setProperty('--y', v.y); s.setProperty('--w', v.w);
     if ('h' in it.base) s.setProperty('--h', v.h);
     s.rotate = v.r + 'deg';
   }
   try {
-    const map = window.JN_LAYOUT || {};
+    const map = window.JN_LAYOUT || {}, each = (list, fn) => Array.prototype.forEach.call(list, fn);
     const num = (el, p) => { const v = parseFloat(el.style.getPropertyValue(p)); return isFinite(v) ? v : null; };
-    Array.prototype.forEach.call(document.querySelectorAll('.page'), sec => {
+    each(document.querySelectorAll('.page'), sec => {
       const pg = (sec.className.match(/\bp-[\w-]+/) || ['page'])[0], seen = {};
-      Array.prototype.forEach.call(sec.querySelectorAll('.a'), el => {
-        const im = el.tagName === 'IMG' ? el : /^(A|BUTTON|LABEL)$/.test(el.tagName) ? el.querySelector('img') : null;
+      function add(el, mode, base, im) {
         const b = el.id || el.getAttribute('name') || (im && (im.getAttribute('src') || '').replace(/^.*\//, '').replace(/\.\w+$/, ''))
-          || Array.prototype.find.call(el.classList, c => !/^(a|h|tap|reveal|bob|deco|in)$/.test(c)) || el.tagName.toLowerCase();
+          || Array.prototype.find.call(el.classList, c => !/^(a|h|tap|reveal|bob|deco|in)$/.test(c))
+          || (el.textContent.trim() === ':' ? 'colon' : el.tagName.toLowerCase());
         const n = seen[b] = (seen[b] || 0) + 1, key = pg + '/' + b + (n > 1 ? '#' + n : '');
+        const it = { el, key, base, mode, name: (im && im.alt) || el.getAttribute('aria-label') || el.getAttribute('placeholder') || b };
+        items.push(it); byKey[key] = it; el.dataset.ek = key;
+        if (map[key]) apply(it, map[key]);
+      }
+      each(sec.querySelectorAll('.a'), el => {
+        const im = el.tagName === 'IMG' ? el : /^(A|BUTTON|LABEL)$/.test(el.tagName) ? el.querySelector('img') : null;
         const base = { x: num(el, '--x'), y: num(el, '--y'), w: num(el, '--w'), h: num(el, '--h'), r: parseFloat(getComputedStyle(el).rotate) || 0 };
         if (base.x === null || base.y === null || base.w === null) return;
         if (base.h === null) delete base.h;
-        const it = { el, key, base, name: (im && im.alt) || el.getAttribute('aria-label') || el.getAttribute('placeholder') || b };
-        items.push(it); byKey[key] = it; el.dataset.ek = key;
-        if (map[key]) apply(it, map[key]);
+        add(el, 'a', base, im);
       });
+      each(sec.querySelectorAll('.cd > span, .np'), el => add(el, 't', { x: 0, y: 0, w: 100, r: 0 }, null));
     });
   } catch (err) { console.error('[layout]', err); }
   return { items, byKey, apply };
@@ -392,6 +405,8 @@ window.CONFIG = {
   date: '2027-01-14T15:29:00+07:00',               // เวลาที่นับถอยหลังไปถึง (เริ่มพิธีแห่ขันหมาก)
   mapUrl: 'https://maps.app.goo.gl/vnC4rqMxVxqcTJpw9',
   lineUrl: 'https://lin.ee/uwWii1c',
+  // ที่อยู่จริงของเซิร์ฟเวอร์: ถ้าหน้าเว็บถูกเปิดผ่านที่อื่น (เช่นเบราว์เซอร์ใน LINE บางกรณี) แล้วส่งไม่ถึง จะส่งตรงมาที่นี่แทน
+  apiOrigin: 'https://junenonthewedding.javaoutrunners.com',
   music: 'music/song.mp3',                         // วางไฟล์เพลงไว้ที่ music/song.mp3
   songTitle: 'ชีวิตคืออะไร',
   songArtist: 'THE TOYS',
@@ -589,7 +604,9 @@ function send(method, url, body, type, timeout, hold) {
       if (x.status >= 200 && x.status < 300 && out && out.ok) return ok(out);
       // ถ้าคำขอถูกส่งต่อไปที่อื่น (redirect / คนละโดเมน) ให้เห็นปลายทางในข้อความ จะได้รู้ว่าติดที่ไหน
       let where = ''; try { const u = new URL(x.responseURL || url, location.href); where = (u.host !== location.host ? u.host : '') + u.pathname; } catch (e) { /* - */ }
-      const err = new Error((out && out.error) || 'HTTP ' + x.status + ' ' + where); err.shown = !!(out && out.error); err.status = x.status; no(err);
+      const head = out ? '' : ' ' + String(x.responseText || '').replace(/\s+/g, ' ').slice(0, 30);      // ไม่ใช่คำตอบจากเซิร์ฟเวอร์เรา → แนบต้นข้อความไว้ดูว่ามาจากไหน
+      const err = new Error((out && out.error) || 'HTTP ' + x.status + ' ' + where + ' @' + location.host + head);
+      err.shown = !!(out && out.error); err.status = x.status; err.foreign = !out; no(err);
     };
     x.onerror = () => no(new Error('network'));
     x.ontimeout = () => no(new Error('timeout'));
@@ -598,9 +615,20 @@ function send(method, url, body, type, timeout, hold) {
     x.send(body);
   });
 }
-const api = (path, body) => send('POST', '/api/' + path, JSON.stringify(body), 'application/json', 30000);
+/* ปกติส่งไปโดเมนเดียวกับหน้าเว็บ · ถ้าได้ 404 ที่ไม่ใช่คำตอบจากเซิร์ฟเวอร์เรา (หน้าเว็บถูกเปิดผ่านตัวกลาง)
+   → สลับไปส่งตรงที่ C.apiOrigin แล้วใช้ต่อทั้งหน้า (เซิร์ฟเวอร์เปิด CORS ไว้ให้ API สาธารณะ) */
+let API = '';
+async function api(path, body) {
+  try { return await send('POST', API + '/api/' + path, JSON.stringify(body), 'application/json', 30000); }
+  catch (err) {
+    if (API || !err.foreign || err.status !== 404 || !C.apiOrigin || location.origin === C.apiOrigin) throw err;
+    console.warn('[api] same-origin 404, retry via', C.apiOrigin);
+    API = C.apiOrigin;
+    return send('POST', API + '/api/' + path, JSON.stringify(body), 'application/json', 30000);
+  }
+}
 // ข้อความจากเซิร์ฟเวอร์แสดงตรง ๆ · นอกนั้นแนบสาเหตุสั้น ๆ ไว้ท้ายข้อความ จะได้รู้ว่าติดที่อะไร
-const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' + (e && e.message ? ' (' + String(e.message).slice(0, 80) + ')' : '');
+const failMsg = e => e && e.shown ? e.message : 'ส่งไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่' + (e && e.message ? ' (' + String(e.message).slice(0, 140) + ')' : '');
 
 /* ปุ่มบวก/ลบ จำนวนคน */
 const cnt = $('#r-count'), CMIN = 1, CMAX = 20;
@@ -643,7 +671,7 @@ function startUpload(blob, kind, ext, onProgress) {
         for (let attempt = 0; ; attempt++) {
           try {
             if (hold.aborted) throw new Error('abort');
-            await send('PUT', `/api/upload/${id}?offset=${o}`, part, 'application/octet-stream', 120000, hold);
+            await send('PUT', `${API}/api/upload/${id}?offset=${o}`, part, 'application/octet-stream', 120000, hold);
             break;
           } catch (err) {
             if (hold.aborted || attempt >= 3 || err.status === 404) throw err;
