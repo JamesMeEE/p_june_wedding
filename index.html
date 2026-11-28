@@ -51,6 +51,13 @@ a.a, button.a{display:block}
 @keyframes bob{0%,100%{scale:1}30%{scale:calc(1 + var(--k,.07))}52%{scale:calc(1 - var(--k,.07) * .2)}72%{scale:calc(1 + var(--k,.07) * .43)}}
 .bob{animation:bob 2.2s ease-in-out infinite;animation-delay:var(--bd,0s)}
 .deco{pointer-events:none}
+/* ไอคอนแผนที่ข้างปุ่ม Google Maps: แผ่นแผนที่ยุบลงนิด ๆ ส่วนหมุดกระโดดขึ้นสูง ๆ สวนทาง และถี่กว่าชิ้นอื่น */
+.map-ic > img{position:absolute;left:0;top:0;width:100%}
+.map-ic > img:first-child{position:relative}
+.map-ic .base{animation:mapDip 1.2s ease-in-out infinite}
+.map-ic .pin{animation:pinHop 1.2s infinite}
+@keyframes mapDip{0%,100%{translate:0 0}45%{translate:0 5%}}
+@keyframes pinHop{0%,100%{translate:0 0;animation-timing-function:cubic-bezier(.2,.7,.3,1)}45%{translate:0 -32%;animation-timing-function:cubic-bezier(.6,0,.8,.4)}}
 
 /* โผล่ขึ้นตอนเลื่อนถึง */
 .reveal{opacity:0;translate:0 calc(26 * var(--u));transition:opacity 1s var(--ease-soft), translate 1.2s var(--ease-out);transition-delay:var(--d,0s)}
@@ -303,6 +310,7 @@ window.JN_INTRO = new Promise(function (done) {
     <img class="bg" src="assets/bg-garden.webp?v=2" alt="" width="945" height="1664" loading="lazy">
     <img class="paper" src="assets/paper-top.webp" alt="" width="945" height="232" loading="lazy">
     <img class="a reveal" style="--x:199;--y:114;--w:542" src="assets/location.webp" alt="Location — สักกายะ | SAK-KA-YA" width="542" height="194" loading="lazy">
+    <a class="a tap reveal map-ic" id="mapIcon" style="--x:138;--y:330;--w:118" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img class="base" src="assets/map-base.webp" alt="" width="300" height="272" loading="lazy"><img class="pin" src="assets/map-pin.webp" alt="" width="300" height="272" loading="lazy"></a>
     <a class="a tap reveal bob" id="mapBtn" style="--bd:.3s;--x:275;--y:353;--w:393" target="_blank" rel="noopener" aria-label="Open in Google Maps"><img src="assets/btn-maps.webp" alt="" width="860" height="147" loading="lazy"></a>
     <img class="a reveal bob" style="--bd:.6s;--x:678;--y:338;--w:97;rotate:28deg;pointer-events:none" src="assets/click.webp" alt="" width="260" height="180" loading="lazy">
     <img class="a reveal bob" style="--k:.015;--bd:.2s;--x:100;--y:465;--w:755" src="assets/plan.webp" alt="What's the plan? 15:29 พิธีแห่ขันหมาก · 16:19 พิธีรดน้ำสังข์ · 18:09 ฉลองมงคลสมรส" width="1100" height="1514" loading="lazy">
@@ -491,6 +499,7 @@ const EDIT = /^\/edit\/?$/.test(location.pathname);      // หน้าแก�
 if (EDIT) { C.autoplay = false; const s = document.createElement('script'); s.src = '/edit.js'; document.body.appendChild(s); }
 
 $('#mapBtn').href = C.mapUrl;
+$('#mapIcon').href = C.mapUrl;
 $('#lineBtn').href = C.lineUrl;
 
 /* ---------- ลิงก์แยก /wishes (หรือ #wishes): เปิดมาแล้วเริ่มที่หน้าเขียนคำอวยพรเลย ---------- */
